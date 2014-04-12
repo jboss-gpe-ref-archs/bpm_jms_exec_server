@@ -1,0 +1,20 @@
+:data-uri:
+:toc2:
+
+:numbered!:
+
+== PURPOSE:
+* Discuss use-cases for JMS API exposed by Execution Server of BPM Suite 6
+* Demonstrate use of JMS API exposed by Execution Server of BPM Suite 6
+* Provide harness to drive load-testing of Execution Server of BPM Suite 6 via the JMS API
+
+== OVERVIEW:
+The focus of this reference architecture is on the JMS API exposed by the Execution Server of BPM Suite 6.
+For the purposes of this reference architecture, the target run-time environment is a BPM Suite 6 enabled 
+gear in OpenShift.  With minimal changes, this reference architecture could also be applied tp a BPM Suite 6
+environment provisioned in a local, non-PaaS environment as well.
+
+This reference architecture includes the following manual:  docs/ref_arch.adoc .
+This reference architecture also includes both client and server-side source code to a scenario called
+_policyQuote_.  This _policyQuote_ scenario is referenced throughout the manual for this reference
+architecture.

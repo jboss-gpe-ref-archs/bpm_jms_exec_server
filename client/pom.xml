@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+      <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
+      <artifactId>bpms.modules</artifactId>
+      <version>1.0</version>
+      <relativePath>../base/pom.xml</relativePath>
+  </parent>
+  
+  <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
+  <artifactId>client</artifactId>
+  <packaging>jar</packaging>
+
+  <properties>
+
+    <!-- *** CHANGE THESE PROPERTIES AS APPROPRIATE  *** -->
+
+    <!-- deployment and connectivity settings to remote Execution Server -->
+    <deploymentId>com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0</deploymentId>
+    <!-- REMOTE SERVER: <deployment.url>http://bpms-gpetraining.itos.redhat.com/business-central</deployment.url> -->
+    <!-- LOCAL 6.0.1 CR2 Server: -->
+    <deployment.url>http://localhost:8080/business-central</deployment.url>
+    <userId>jboss</userId>
+    <!-- REMOTE SERVER PWD: <password>brms</password> -->
+    <!-- LOCAL SERVER PWD: -->
+    <password>jbosspw1!</password>
+    <processId>processTier.bpm_jms_exec_server</processId>
+
+    <!-- process variables past to policyquote process at start-up -->
+    <driverName>azra</driverName>
+    <age>23</age>
+    <policyType>AUTO</policyType>
+    <numberOfAccidents>2</numberOfAccidents>
+    <numberOfTickets>2</numberOfTickets>
+    <vehicleYear>2010</vehicleYear>
+    <creditScore>750</creditScore>
+
+    <includePolicyPayload>TRUE</includePolicyPayload>
+    <!-- *********************************************** -->
+
+    <resteasy.version>2.3.6.Final</resteasy.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.16</version>
+        <configuration>
+          <systemPropertyVariables>
+            <deploymentId>${deploymentId}</deploymentId>
+            <deployment.url>${deployment.url}</deployment.url>
+            <userId>${userId}</userId>
+            <password>${password}</password>
+            <processId>${processId}</processId>
+            <driverName>${driverName}</driverName>
+            <age>${age}</age>
+            <policyType>${policyType}</policyType>
+            <numberOfAccidents>${numberOfAccidents}</numberOfAccidents>
+            <numberOfTickets>${numberOfTickets}</numberOfTickets>
+            <vehicleYear>${vehicleYear}</vehicleYear>
+            <creditScore>${creditScore}</creditScore>
+            <includePolicyPayload>${includePolicyPayload}</includePolicyPayload>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+
+    <!-- dependency for domain classes such as Policy, Driver & Rejection -->
+    <dependency>
+       <groupId>org.acme.insurance</groupId>
+       <artifactId>domain</artifactId>
+       <version>1.0</version>
+    </dependency>
+
+    <!-- kie/drools/jbpm -->
+    <dependency>
+       <groupId>org.kie.remote</groupId>
+       <artifactId>kie-services-client</artifactId>
+    </dependency>
+    <dependency>
+       <groupId>org.kie</groupId>
+       <artifactId>kie-api</artifactId>
+    </dependency>
+    <!-- hornetq -->
+    <dependency>
+   		<groupId>org.hornetq</groupId>
+  		<artifactId>hornetq-jms</artifactId>
+  		<version>2.2.7.Final</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.hornetq</groupId>
+  		<artifactId>hornetq-core</artifactId>
+  		<version>2.2.13.Final</version>
+  	</dependency>
+  	<!--  netty  -->
+  	<dependency>
+		<groupId>org.jboss.netty</groupId>
+	  	<artifactId>netty</artifactId>
+	  	<version>3.2.6.Final</version>
+	</dependency>
+
+    <!-- test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+      <version>4.9</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+      <version>1.0.9</version>
+    </dependency>
+  </dependencies>
+
+</project>
+

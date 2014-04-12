@@ -1,0 +1,9 @@
+<kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <kbase name="bpm_jms_exec_server" default="true" eventProcessingMode="cloud" equalsBehavior="identity">
+    <ksession name="bpm_jms_exec_server_session" type="stateful" default="true" clockType="realtime">
+      <workItemHandlers>
+        <workItemHandler type="new com.redhat.gpe.refarch.bpm_jms_exec_server.processTier.JMSWorkItemHandler()" name="JMSProducerTask"/>
+      </workItemHandlers>
+    </ksession>
+  </kbase>
+</kmodule>

@@ -1,0 +1,14 @@
+*.class
+*~
+~lock.*
+~$*
+.DS_Store
+*.nogit/
+*.html
+target/
+bin/
+.classpath
+.project
+.settings/
+*.zip
+lab_assets/
