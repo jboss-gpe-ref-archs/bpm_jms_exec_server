@@ -10,7 +10,7 @@
   </parent>
   
   <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
-  <artifactId>client</artifactId>
+  <artifactId>loadtest</artifactId>
   <packaging>jar</packaging>
 
   <properties>
