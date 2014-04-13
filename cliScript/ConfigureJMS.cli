@@ -1,3 +1,0 @@
-connect
-jms-queue add  --queue-address=JmsServiceQueue --entries=queues/JmsServiceQueue
-/subsystem=messaging/hornetq-server=default/jms-queue=JmsServiceQueue/:read-resource(recursive=false,proxies=false,include-runtime=true,include-defaults=true)

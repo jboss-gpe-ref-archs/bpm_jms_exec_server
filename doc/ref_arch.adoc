@@ -6,8 +6,8 @@ image::images/rhheader.png[width=900]
 
 :numbered!:
 [abstract]
-== JMS to BPM Suite 6 Process Engine
-This reference architecture provides a detailed example of how to configure and use the JMS interface to the BPM Suite 6 process engine.
+== BPM Suite 6 Execution Server:  JMS API
+This reference architecture provides a detailed example of how to configure and use the JMS API of the BPM Suite 6 Execution Server.
 Along with the explanation, a project is provided with instructions on how to execute the example.
 
 :numbered:
