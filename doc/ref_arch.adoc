@@ -10,6 +10,17 @@ image::images/rhheader.png[width=900]
 This reference architecture provides a detailed example of how to configure and use the JMS API of the BPM Suite 6 Execution Server.
 Along with the explanation, a project is provided with instructions on how to execute the example.
 
+This reference architecture provides two major use cases related to JMS and BPM Suite 6 and one utility use case.  The two major use case are the following:
+
+. `JMS Transport` - Starting a BPM Suite 6 process via a JMS transport.  The use case includes passing parameters to the BPM Suite 6 process and recieving a confirmation response from BPM Suite 6.
+. `JMS Service Task` - Sending a JMS message from a BPM Suite 6 process.
+
+The utility use case uses JMeter to perform load tests against the JMS transport.  The term `utility use case` is used because it is not functionality that to be used in an application, yet it provides vital informaiton for building applications.  
+
+The following discusses when it is necessary to use these use cases, how the examples work, and how to configure the examples to run on your own system.
+
+TIP: Within the context of the discussion, `TIP` sections like this will be used to highlight best practices.
+
 :numbered:
 
 == The Use Case
@@ -26,12 +37,47 @@ has numerous benefits to the overall system including:
 . *Buffering* - 
 
 == BPM Suite 6 integration via JMS
+The JMS API can be used in two directions with respect to BPM Suite 6. First a JMS message may be sent to the BPM Suite 6 server to start a process.  Second
+a BPM Suite 6 process may need to send a JMS message to a topic or queue.  Both of these cases are are addressed in this reference architecture.
+
+=== The JMS Transport
+The JMS transport example sends a POJO java object from a client application to a BPM Suite 6 process.  The BPM Suite 6 process is started upon retrieving the message from the JMS queue.  For this example, a `client application` refers to process running outside of the JVM for the server.  See the following diagram for an illustration of this use case.
+
 The following architecture diagram illustrates the components discussed below.
 
-.JMS to BPM Suite 6 Architecture Diagram
+.JMS Transport Architecture Diagram
 image::images/jms-exec-arch-diagram.png[width="60%"]
 
-=== JMS Service Work Item Handler
+Each component in the diagram plays a role in the execution of the use case and is discussed roughly in the order of execution of the use case.
+
+==== Client JMV
+
+
+==== JMS Client
+
+
+==== pom.xml
+
+
+==== Domain
+
+
+==== HornetQ
+
+
+==== Maven Repository
+
+
+==== Execution Server
+
+
+==== Process Engine
+
+
+
+
+
+=== JMS Service Task
 The purpose of this custom Work Item Handler is to provide a flexible JMS Service for sending messages via JMS to a JMS Queue or Topic.
 The following are setup details:
 
