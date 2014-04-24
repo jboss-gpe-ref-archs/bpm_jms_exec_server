@@ -125,7 +125,7 @@ Cart to restart?
 ----------
 
 
-onfigure queues for BPM Sutie 6 messages
+==== Configure queues for BPM Sutie 6 messages
 When the business-central Workbench is deployed, it automatically creates 3 queues:
 
 * jms/queue/KIE.SESSION
