@@ -73,7 +73,124 @@ Each component in the diagram plays a role in the execution of the use case and 
 === BPM Suite 6 Process Engine
 
 
-=== JMS Transport use and configuration
+=== JMS Transport configuration and execution
+To setup this use case we will take the following major steps:
+
+.Setup Summary
+. Domain class installation
+. Configure queues for BPM Sutie 6 messages
+. Configure port forwarding for the JMS Broker
+. Configure port forwarding for the JBoss EAP console
+. Add the target business process to the server
+. Configure the JMS Client
+. Execute the use case
+
+The details of these steps are provided below.
+
+==== Domain class installation
+In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packageing
+the jar files that will contain the domain classes for this reference architecture.
+
+The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift. Finally, we will also
+configure the `business-central.war` application in BPM Suite 6 to have a dependency on the static module, making the domain class available to use in your business processes.
+
+From your local cloned copy of this project do the following:
+
+. create the jar for the domain classes
+.. cd domain
+.. mvn clean package
+.. cd ..
+. copy the directories and files required to create a static module on the JBoss EAP server
+.. local:
+... cp -r domain/conf/org $JBOSS_HOME/modules/system/layers/base
+... cp domain/target/domain-1.0.jar $JBOSS_HOME/modules/system/layers/base/org/acme/insurance/main/
+.. remote:
+... ssh <ssh_url_to_your_openshift_environment> 'mkdir -p app-root/data/appModules'
+... scp -r domain/conf/org 5345d948a99d3d8e8b00001c@bpmsrt-bpmstraining.apps.lab2.opentlc.com:~/app-root/data/appModules/
+... scp domain/target/domain-1.0.jar 5345d948a99d3d8e8b00001c@bpmsrt-bpmstraining.apps.lab2.opentlc.com:~/app-root/data/appModules/org/acme/insurance/main/
+. Add and explicit dependency for business-central.war on the static module for the domain module
+.. ssh <ssh_url_to_your_openshift_environment>
+.. In a text editor, open the following file `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
+.. Add the following to the list of dependecies: `<module name="org.acme.insurce" export="true" services="import" meta-inf="import"/>`
+.. Save the changes to the file
+. Restart your OpenShift BPM Suite 6 instance
+.. Determine if the JBoss process is already running by entering: `ps -aef | grep java`
+... If the JBoss process is not running, then execute: `ctl_app start`
+... If the JBoss process is running, then execute: `ctl_app restart` and select option `1` at the following prompt:
+
+----------
+Cart to restart?
+1. bpms-6.0
+2. mysql-5.1
+----------
+
+
+onfigure queues for BPM Sutie 6 messages
+When the business-central Workbench is deployed, it automatically creates 3 queues:
+
+* jms/queue/KIE.SESSION
+* jms/queue/KIE.TASK
+* jms/queue/KIE.RESPONSE
+
+The `KIE.SESSION` and `KIE.TASK` queues should be used to send command request messages to the JMS API. Command response
+messages will be then placed on the `KIE.RESPONSE`. Command request messages that involve starting and managing business processes
+should be sent to the `KIE.SESSION` and command request messages that involve managing human tasks, should be sent to the
+`KIE.TASK` queue.
+
+Although there are 2 different input queues, `KIE.SESSION` and `KIE.TASK`, this is only in order to provide multiple
+input queues so as to optimize processing: command request messages will be processed in the same manner regardless of which queue they're sent to.
+However, in some cases, users may send many more requests involving human tasks than requests involving business processes, but then not want the
+processing of business process-related request messages to be delayed by the human task messages. By sending the appropriate command request
+messages to the appropriate queues, this problem can be avoided.
+
+The BPM Suite 6 Execution Server uses a Message Driven Bean (MDB) to process messages on the from the queues.  To change the any of the above queues
+to an alternative queue, change the JDNI name in the MDB configuration to point to the desired queue.  The JNDI configuration for the MDB can be found
+at the following location:
+
+.ejb-jar.xml file for the MDB
+----------
+$JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
+----------
+
+The three default queues are created in HornetQ.  The following file is used to configure the three queue in the EAP server:
+
+.HornetQ Queue configurations for BPM Suite 6
+----------
+business-central.war/WEB-INF/bpms-jms.xml
+----------
+
+For this reference architecture, the default queues will be used, so no steps are required to setup the queues.  However, HornetQ uses port `5445` which is
+not an open port on the OpenShift server.  Therefore port forwarding is configured in the next step to resolve this issue.
+
+==== Configure port forwarding for the JMS Broker
+The ssh utility allows you to forward a port through the encrypted connection it establishes.  This setup is also referred to as `ssh tunneling`.
+Since port 5445 is not open on the OpenShift server, port forwarding will be configured to securely access these services.
+
+Execute the following command from your command window on your local computer to configure and launch a port forwarding process for access to HornetQ:
+
+.Port Forwarding command for HornetQ access
+----------
+ssh -N -L localhost:5445:<ip_address_to_your_openshift_server>:5445 <ssh_url_to_your_openshift_environment>
+----------
+
+While the port forwarding process is running, the HornetQ broker can be access on the local computer at `localhost:5445`.
+Use `Ctrl+c` to kill the process to turn off port forwarding.
+
+==== Configure port forwarding for the JBoss EAP console
+For this reference architecture, access to the EAP console is not strickly required.  However, it may be desireable to access the console to configure alternative
+settings, for JMS Queues for example.  The EAP console runs on port 9990.  Again, this port is not open on the OpenShift server so port forwarding can be used to provide access.
+
+Use the following command to setup port forarding for the EAP console:
+
+.Port Forwarding command for JBoss EAP access
+----------
+ssh -N -L localhost:9990:<ip_address_to_your_openshift_server>:9990 <ssh_url_to_your_openshift_environment>
+----------
+
+While the port forwarding process is running, the EAP console may be accessed on the browser at the address `http://localhost:9990/console`
+
+==== Add the target business process to the server
+
 
 
 == JMS Service Task
