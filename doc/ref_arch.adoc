@@ -106,8 +106,8 @@ From your local cloned copy of this project do the following:
 ... cp domain/target/domain-1.0.jar $JBOSS_HOME/modules/system/layers/base/org/acme/insurance/main/
 .. remote:
 ... ssh <ssh_url_to_your_openshift_environment> 'mkdir -p app-root/data/appModules'
-... scp -r domain/conf/org 5345d948a99d3d8e8b00001c@bpmsrt-bpmstraining.apps.lab2.opentlc.com:~/app-root/data/appModules/
-... scp domain/target/domain-1.0.jar 5345d948a99d3d8e8b00001c@bpmsrt-bpmstraining.apps.lab2.opentlc.com:~/app-root/data/appModules/org/acme/insurance/main/
+... scp -r domain/conf/org <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/
+... scp domain/target/domain-1.0.jar <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/org/acme/insurance/main/
 . Add and explicit dependency for business-central.war on the static module for the domain module
 .. ssh <ssh_url_to_your_openshift_environment>
 .. In a text editor, open the following file `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
