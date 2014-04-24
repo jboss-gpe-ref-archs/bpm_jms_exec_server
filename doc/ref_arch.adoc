@@ -73,7 +73,7 @@ Each component in the diagram plays a role in the execution of the use case and 
 === BPM Suite 6 Process Engine
 
 
-=== JMS Transport configuration and execution
+== JMS Transport configuration and execution
 To setup this use case we will take the following major steps:
 
 .Setup Summary
@@ -87,7 +87,7 @@ To setup this use case we will take the following major steps:
 
 The details of these steps are provided below.
 
-==== Domain class installation
+=== Domain class installation
 In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packageing
 the jar files that will contain the domain classes for this reference architecture.
 
@@ -125,7 +125,7 @@ Cart to restart?
 ----------
 
 
-==== Configure queues for BPM Sutie 6 messages
+=== Configure queues for BPM Sutie 6 messages
 When the business-central Workbench is deployed, it automatically creates 3 queues:
 
 * jms/queue/KIE.SESSION
@@ -162,7 +162,7 @@ business-central.war/WEB-INF/bpms-jms.xml
 For this reference architecture, the default queues will be used, so no steps are required to setup the queues.  However, HornetQ uses port `5445` which is
 not an open port on the OpenShift server.  Therefore port forwarding is configured in the next step to resolve this issue.
 
-==== Configure port forwarding for the JMS Broker
+=== Configure port forwarding for the JMS Broker
 The ssh utility allows you to forward a port through the encrypted connection it establishes.  This setup is also referred to as `ssh tunneling`.
 Since port 5445 is not open on the OpenShift server, port forwarding will be configured to securely access these services.
 
@@ -176,7 +176,7 @@ ssh -N -L localhost:5445:<ip_address_to_your_openshift_server>:5445 <ssh_url_to_
 While the port forwarding process is running, the HornetQ broker can be access on the local computer at `localhost:5445`.
 Use `Ctrl+c` to kill the process to turn off port forwarding.
 
-==== Configure port forwarding for the JBoss EAP console
+=== Configure port forwarding for the JBoss EAP console
 For this reference architecture, access to the EAP console is not strickly required.  However, it may be desireable to access the console to configure alternative
 settings, for JMS Queues for example.  The EAP console runs on port 9990.  Again, this port is not open on the OpenShift server so port forwarding can be used to provide access.
 
@@ -189,7 +189,7 @@ ssh -N -L localhost:9990:<ip_address_to_your_openshift_server>:9990 <ssh_url_to_
 
 While the port forwarding process is running, the EAP console may be accessed on the browser at the address `http://localhost:9990/console`
 
-==== Add the target business process to the server
+=== Add the target business process to the server
 
 
 
