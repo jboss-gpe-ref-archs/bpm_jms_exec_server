@@ -99,21 +99,20 @@ configure the `business-central.war` application in BPM Suite 6 to have a depend
 From your local cloned copy of this project do the following:
 
 . create the jar for the domain classes
-.. cd domain
-.. mvn clean package
-.. cd ..
+.. `cd domain`
+.. `mvn clean package`
+.. `cd ..`
 . copy the directories and files required to create a static module on the JBoss EAP server
 .. local:
-... cp -r domain/conf/org $JBOSS_HOME/modules/system/layers/base
-... cp domain/target/domain-1.0.jar $JBOSS_HOME/modules/system/layers/base/org/acme/insurance/main/
+... `cp -r domain/conf/org $JBOSS_HOME/modules/system/layers/base`
+... `cp domain/target/domain-1.0.jar $JBOSS_HOME/modules/system/layers/base/org/acme/insurance/main/`
 .. remote:
-... ssh <ssh_url_to_your_openshift_environment> \'mkdir -p app-root/data/appModules'
-... scp -r domain/conf/org <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/
-... scp domain/target/domain-1.0.jar <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/org/acme/insurance/main/
+... `scp -r domain/conf/org <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/`
+... `scp domain/target/domain-1.0.jar <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/org/acme/insurance/main/`
 . Add and explicit dependency for business-central.war on the static module for the domain module
-.. ssh <ssh_url_to_your_openshift_environment>
+.. `ssh <ssh_url_to_your_openshift_environment>`
 .. In a text editor, open the following file `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
-.. Add the following to the list of dependecies: `<module name="org.acme.insurce" export="true" services="import" meta-inf="import"/>`
+.. Add the following to the list of dependecies: `<module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>`
 .. Save the changes to the file
 . Restart your OpenShift BPM Suite 6 instance
 .. Determine if the JBoss process is already running by entering: `ps -aef | grep java`
@@ -140,6 +139,15 @@ Wait for a log entry that includes the following:
 ----------
 Deployed "business-central.war" (runtime-name : "business-central.war")
 ----------
+
+Alternatively, you may get the following message:
+
+.Starup confirmation message 2
+----------
+Replaced deployment "business-central.war" with deployment "business-central.war"
+----------
+
+
 
 === Configure queues for BPM Sutie 6 messages
 When the business-central Workbench is deployed, it automatically creates 3 queues:
@@ -223,6 +231,7 @@ Use the following steps to setup the business process for this reference archite
 .. Add `jmsTransportRA` for the name of your repository and select the organization unit previously made, then select `Create`
 .. Select `Authoring` -> `Project Authoring`
 .. Make sure the `jmsTransportRA` repository is viewable in the `Project Explorer`
+... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
 .. Select `New Item` -> `Project`
 .. Add a project name of `jmsTransportProj`
 .. Select `Ok`
@@ -235,7 +244,7 @@ Use the following steps to setup the business process for this reference archite
 Since the port for the *git* protocol is not open on the OpenShift server, the clone operation will use the *ssh* protocol instead.
 
 [start=3]
-. Use a comand, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
+. In your local command window, Use a comand, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
 
 ----------
 git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/jmsTransportRA.git
@@ -243,13 +252,29 @@ git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/jmsTran
 
 [start=4]
 . From the root directory of this reference architecture, copy the contents of `processTier/src` to the directory created in the previous step
-.. `cp -r processTier/src <path_to_your_clone>/jmsTransport/jmsTransportProj/.`
+.. `cp -r processTier/src <path_to_your_clone>/jmsTransportRA/jmsTransportProj/.`
 . Next, commit the changes and push the changes to the remote BPM Suite 6 instance
 .. `git add jmsTransportProj/src`
 .. `git commit -m 'Added the project with the business processes for the reference architecture'`
 .. `git pull`
 .. `git push`
 
+At this point, your business process is available on the remote BPM Suite 6 server. 
+
+[start=6]
+. From within the business-central workbench, select `Authoring` -> `Project Authoring`
+. Find and open the `pringInbound` business process in the Web Designer
+. Open the `Properties` panel for the process and notice the process Id value of `processTier.printInbound`. This will be used in the client's JMS message.
+
+
+Use the following steps to create a deployment for the project:
+
+[start=9]
+. From within the business-central workbench, select `Authoring` -> `Project Authoring`
+. Select the `Build & Deploy` button.
+. After the build completes, select `Deploy` -> `Deployments`
+. Take note of the deployment Id in the column labled `Deployment`.
+.. If you used the values in this document the deployment ID will be `com.gpe.jmsTransport:jmsTransportProj:1.0`.  This value will be used in the client's JMS message.
 
 
 [[Configure_the_JMS_Client]]
