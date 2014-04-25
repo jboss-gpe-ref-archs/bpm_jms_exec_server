@@ -1,6 +1,8 @@
 :data-uri:
 :toc2:
-:labs: link:http://people.redhat.com/althomas/eap6/eap6CourseMaterial.html[Course Materials]
+:rpms: link:https://github.com/jboss-gpe-ose/jboss_bpm_soa_rpmbuild[RPMs]
+:cart: link:https://github.com/jboss-gpe-ose/openshift-origin-cartridge-bpms-full[Red Hat GPE's BPM Suite 6 cartridge]
+:bpm.product: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/[Red Hat's BPM Suite 6 product]
 
 image::images/rhheader.png[width=900]
 
@@ -72,6 +74,12 @@ Each component in the diagram plays a role in the execution of the use case and 
 
 === BPM Suite 6 Process Engine
 
+== Pre-Requisites
+The remainder of this documentation provides instructions for installation, configuration and execution of this reference archicture.  The following is a list of pre-requisites:
+. Openshift Enterprise 2.* environment that has been installed with {rpms} needed to support {cart}.  Contact the Red Hat GPE team for more details.
+. ssh client
+. maven 3.0.5 (or greater)
+. familiarity with {bpm.product}
 
 == JMS Transport configuration and execution
 To setup this use case we will take the following major steps:
