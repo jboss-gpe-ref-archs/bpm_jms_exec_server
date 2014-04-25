@@ -89,7 +89,9 @@ The details of these steps are provided below.
 
 === Domain class installation
 In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packageing
-the jar files that will contain the domain classes for this reference architecture.
+the jar files that will contain the domain classes for this reference architecture.  If you examine the domain classes, you will find that they are configured to
+enable serialization via Java Architecture for XML Binding (JAXB).  There are steps required by the client to enable the server to process the JAXB annotated objects.
+Those details are discussed in the <<Configure_the_JMS_Client,client configuration>> section. 
 
 The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift. Finally, we will also
 configure the `business-central.war` application in BPM Suite 6 to have a dependency on the static module, making the domain class available to use in your business processes.
@@ -124,6 +126,20 @@ Cart to restart?
 2. mysql-5.1
 ----------
 
+When the cursor returns, typically the server has not completely started at that moment.  Use the following command to view the log file and confirm
+when the server startup has completed:
+
+.View the server log
+----------
+tail -f ~/bpms/standalone/log/server.log
+----------
+
+Wait for a log entry that includes the following:
+
+.Confirmation of server startup
+----------
+Deployed "business-central.war" (runtime-name : "business-central.war")
+----------
 
 === Configure queues for BPM Sutie 6 messages
 When the business-central Workbench is deployed, it automatically creates 3 queues:
@@ -190,6 +206,57 @@ ssh -N -L localhost:9990:<ip_address_to_your_openshift_server>:9990 <ssh_url_to_
 While the port forwarding process is running, the EAP console may be accessed on the browser at the address `http://localhost:9990/console`
 
 === Add the target business process to the server
+This reference architecture uses a simple buiness process that prints a conformation message to confirm that the process was started at that the parameter sent via the JMS message
+is available to the business process as a process variable.
+
+To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
+The following provides the deatils for these steps.
+
+Use the following steps to setup the business process for this reference architecture:
+
+. Create an *Organization, Repository and Project* in your BPM Suite 6 server
+.. Select `Authoring` -> `Administration`
+.. Select `Organizational Units` -> `Manage Organizational Units`
+.. Under `Organizational Unit Manager`, select the `Add` button
+.. Enter a name and owner and select `Ok`
+.. Select `Repostories` -> `New Repository`
+.. Add `jmsTransportRA` for the name of your repository and select the organization unit previously made, then select `Create`
+.. Select `Authoring` -> `Project Authoring`
+.. Make sure the `jmsTransportRA` repository is viewable in the `Project Explorer`
+.. Select `New Item` -> `Project`
+.. Add a project name of `jmsTransportProj`
+.. Select `Ok`
+.. For organization add `com.gpe.jmsTransport`
+.. Select `Finish`
+
+[start=2]
+. Open a command window to a directory where you will add the cloned version of the BPM Suite 6 project.
+
+Since the port for the *git* protocol is not open on the OpenShift server, the clone operation will use the *ssh* protocol instead.
+
+[start=3]
+. Use a comand, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
+
+----------
+git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/jmsTransportRA.git
+----------
+
+[start=4]
+. From the root directory of this reference architecture, copy the contents of `processTier/src` to the directory created in the previous step
+.. `cp -r processTier/src <path_to_your_clone>/jmsTransport/jmsTransportProj/.`
+. Next, commit the changes and push the changes to the remote BPM Suite 6 instance
+.. `git add jmsTransportProj/src`
+.. `git commit -m 'Added the project with the business processes for the reference architecture'`
+.. `git pull`
+.. `git push`
+
+
+
+[[Configure_the_JMS_Client]]
+=== Configure the JMS Client
+
+
+=== Execute the use case
 
 
 
@@ -219,12 +286,12 @@ Each component in the diagram plays a role in the execution of the use case and 
 === JMS Broker
 
 
-=== JMS Service Task use and configuration
+== JMS Service Task use and configuration
 
 
 
 
-==== Adding the WIH to JBoss EAP 6
+=== Adding the WIH to JBoss EAP 6
 The work item handler comes in a jar file that is deployed to JBoss EAP 6 as a static module in JBoss Modules.  To do this do the following steps.
 
 . Shutdown JBoss EAP 6
@@ -239,7 +306,7 @@ The work item handler comes in a jar file that is deployed to JBoss EAP 6 as a s
 . Add the following as a new entry in the list of dependencies: `<module name="org.gpe.service.jms"/>`
 . Save the file and restart the server
 
-==== Setup the Queue
+=== Setup the Queue
 The service will write messages to a Queue. You can use the `ConfigureJMS.cli` CLI script in the `cliScript` folder to setup the queue.  Execute
 the script with the following command:
 
@@ -251,7 +318,7 @@ the script with the following command:
 You can use the other script to check the status of the queue.
 
 
-==== Adding the registration for the WIH
+=== Adding the registration for the WIH
 To register the Work Item Handler it must be registered with the process engine.  To do this we and an entry into kmodule.xml as follows
 
 . Within Business-central naviage to the `kmodule.xml` file. (under resources/META-INF)
@@ -272,7 +339,7 @@ To register the Work Item Handler it must be registered with the process engine.
 . Be sure to `save` the change.
 . It seems to be necessary to restart the server after making a change to the kmodule.xml file.  Do this `before` doing a build and deploy.
 
-==== Testing the service
+=== Testing the service
 Three artifacts have been added to aid in testing the service.
 
 - *TestJMSServiceTask* is a simple business process that uses the JMS service.
