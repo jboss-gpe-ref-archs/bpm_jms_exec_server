@@ -1,6 +1,9 @@
 :data-uri:
 :toc2:
-:labs: link:http://people.redhat.com/althomas/eap6/eap6CourseMaterial.html[Course Materials]
+:rpms: link:https://github.com/jboss-gpe-ose/jboss_bpm_soa_rpmbuild[RPMs]
+:cart: link:https://github.com/jboss-gpe-ose/openshift-origin-cartridge-bpms-full[Red Hat GPE's BPM Suite 6 cartridge]
+:bpmproduct: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/[Red Hat's BPM Suite 6 product]
+:osetools: link:https://access.redhat.com/site/documentation/en-US/OpenShift_Enterprise/2/html-single/Client_Tools_Installation_Guide/index.html[Openshift Enterprise client tools]
 
 image::images/rhheader.png[width=900]
 
@@ -72,6 +75,21 @@ Each component in the diagram plays a role in the execution of the use case and 
 
 === BPM Suite 6 Process Engine
 
+== Pre-Requisites
+The remainder of this documentation provides instructions for installation, configuration and execution of this reference archicture.  
+The following is a list of pre-requisites:
+
+. {osetools}
+. Openshift Enterprise 2.* environment that has been installed with {rpms} needed to support {cart}.  Contact the Red Hat GPE team for more details.
+. medium-sized Openshift Enterprise gear provisioned with {cart} and mysql-5.
+. ssh client
+. maven 3.0.5 (or greater)
+. git client
+. familiarity with {bpmproduct}
+
+As is evidenced by these pre-requisites, the assumed BPM Suite 6 runtime environment for this reference architecture 
+documentation is an Openshift Enterprise gear.  However, BPM Suite 6 can be installed in a non-PaaS local environment.  
+Thus it could be possible to execute this reference archicture in a non-PaaS local environment as well.
 
 == JMS Transport configuration and execution
 To setup this use case we will take the following major steps:
