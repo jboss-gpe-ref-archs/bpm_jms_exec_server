@@ -4,6 +4,7 @@
 :cart: link:https://github.com/jboss-gpe-ose/openshift-origin-cartridge-bpms-full[Red Hat GPE's BPM Suite 6 cartridge]
 :bpmproduct: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/[Red Hat's BPM Suite 6 product]
 :osetools: link:https://access.redhat.com/site/documentation/en-US/OpenShift_Enterprise/2/html-single/Client_Tools_Installation_Guide/index.html[Openshift Enterprise client tools]
+:commands: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/6.0/html-single/Development_Guide/index.html#Execute_calls[BPM Suite 6 Commands]
 
 image::images/rhheader.png[width=900]
 
@@ -15,10 +16,10 @@ Along with the explanation, a project is provided with instructions on how to ex
 
 This reference architecture provides two major use cases related to JMS and BPM Suite 6 and one utility use case.  The two major use case are the following:
 
-. `JMS Transport` - Starting a BPM Suite 6 process via a JMS transport.  The use case includes passing parameters to the BPM Suite 6 process and recieving a confirmation response from BPM Suite 6.
+. `JMS Transport` - Starting a BPM Suite 6 process via a JMS transport.  The use case includes passing parameters to the BPM Suite 6 process and receiving a confirmation response from BPM Suite 6.
 . `JMS Service Task` - Sending a JMS message from a BPM Suite 6 process.
 
-The utility use case uses JMeter to perform load tests against the JMS transport.  The term `utility use case` is used because it is not functionality that to be used in an application, yet it provides vital informaiton for building applications.  
+The utility use case uses JMeter to perform load tests against the JMS transport.  The term `utility use case` is used because it is not functionality that to be used in an application, yet it provides vital information for building applications.  
 
 The following discusses when it is necessary to use these use cases, how the examples work, and how to configure the examples to run on your own system.
 
@@ -28,7 +29,7 @@ TIP: Within the context of the discussion, `TIP` sections like this will be used
 
 == BPM Suite 6 integration via JMS
 Message queues are a vital component to many application architectures.  Any time two independent systems are required to communicate, there is the high potential
-that they will differ in processing speed and availbility.  This leads to the need for asynchronous communication to decouple the sender from the receiver.  This decoupling
+that they will differ in processing speed and availability.  This leads to the need for asynchronous communication to decouple the sender from the receiver.  This decoupling
 has numerous benefits to the overall system including:
 
 . *Decoupling* - The two systems can be extended and modified independently as long as they adhere to the same interface requirements
@@ -76,7 +77,7 @@ Each component in the diagram plays a role in the execution of the use case and 
 === BPM Suite 6 Process Engine
 
 == Pre-Requisites
-The remainder of this documentation provides instructions for installation, configuration and execution of this reference archicture.  
+The remainder of this documentation provides instructions for installation, configuration and execution of this reference architecture.  
 The following is a list of pre-requisites:
 
 . {osetools}
@@ -89,7 +90,7 @@ The following is a list of pre-requisites:
 
 As is evidenced by these pre-requisites, the assumed BPM Suite 6 runtime environment for this reference architecture 
 documentation is an Openshift Enterprise gear.  However, BPM Suite 6 can be installed in a non-PaaS local environment.  
-Thus it could be possible to execute this reference archicture in a non-PaaS local environment as well.
+Thus it could be possible to execute this reference architecture in a non-PaaS local environment as well.
 
 == JMS Transport configuration and execution
 To setup this use case we will take the following major steps:
@@ -106,7 +107,7 @@ To setup this use case we will take the following major steps:
 The details of these steps are provided below.
 
 === Domain class installation
-In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packageing
+In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packaging
 the jar files that will contain the domain classes for this reference architecture.  If you examine the domain classes, you will find that they are configured to
 enable serialization via Java Architecture for XML Binding (JAXB).  There are steps required by the client to enable the server to process the JAXB annotated objects.
 Those details are discussed in the <<Configure_the_JMS_Client,client configuration>> section. 
@@ -118,7 +119,7 @@ From your local cloned copy of this project do the following:
 
 . create the jar for the domain classes
 .. `cd domain`
-.. `mvn clean package`
+.. `mvn clean install`
 .. `cd ..`
 . copy the directories and files required to create a static module on the JBoss EAP server
 .. local:
@@ -130,7 +131,7 @@ From your local cloned copy of this project do the following:
 . Add and explicit dependency for business-central.war on the static module for the domain module
 .. `ssh <ssh_url_to_your_openshift_environment>`
 .. In a text editor, open the following file `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
-.. Add the following to the list of dependecies: `<module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>`
+.. Add the following to the list of dependencies: `<module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>`
 .. Save the changes to the file
 . Restart your OpenShift BPM Suite 6 instance
 .. Determine if the JBoss process is already running by entering: `ps -aef | grep java`
@@ -160,14 +161,14 @@ Deployed "business-central.war" (runtime-name : "business-central.war")
 
 Alternatively, you may get the following message:
 
-.Starup confirmation message 2
+.Start up confirmation message 2
 ----------
 Replaced deployment "business-central.war" with deployment "business-central.war"
 ----------
 
 
 
-=== Configure queues for BPM Sutie 6 messages
+=== Configure queues for BPM Suite 6 messages
 When the business-central Workbench is deployed, it automatically creates 3 queues:
 
 * jms/queue/KIE.SESSION
@@ -204,29 +205,40 @@ business-central.war/WEB-INF/bpms-jms.xml
 For this reference architecture, the default queues will be used, so no steps are required to setup the queues.  However, HornetQ uses port `5445` which is
 not an open port on the OpenShift server.  Therefore port forwarding is configured in the next step to resolve this issue.
 
+[[HornetQ_port_forwarding]]
 === Configure port forwarding for the JMS Broker
 The ssh utility allows you to forward a port through the encrypted connection it establishes.  This setup is also referred to as `ssh tunneling`.
 Since port 5445 is not open on the OpenShift server, port forwarding will be configured to securely access these services.
 
-Execute the following command from your command window on your local computer to configure and launch a port forwarding process for access to HornetQ:
+Execute the following commands from your command window on your local computer to configure and launch a port forwarding process for access to HornetQ:
+
+.Obtain the IP address for the OSE internal NIC
+----------
+ssh <ssh_url_to_your_openshift_environment> 'echo $OPENSHIFT_BPMS_IP'
+----------
 
 .Port Forwarding command for HornetQ access
 ----------
-ssh -N -L localhost:5445:<ip_address_to_your_openshift_server>:5445 <ssh_url_to_your_openshift_environment>
+ssh -N -L localhost:5445:<ipaddress from previous step>:5445 <ssh_url_to_your_openshift_environment>
 ----------
 
 While the port forwarding process is running, the HornetQ broker can be access on the local computer at `localhost:5445`.
 Use `Ctrl+c` to kill the process to turn off port forwarding.
 
 === Configure port forwarding for the JBoss EAP console
-For this reference architecture, access to the EAP console is not strickly required.  However, it may be desireable to access the console to configure alternative
+For this reference architecture, access to the EAP console is not strictly required.  However, it may be desirable to access the console to configure alternative
 settings, for JMS Queues for example.  The EAP console runs on port 9990.  Again, this port is not open on the OpenShift server so port forwarding can be used to provide access.
 
-Use the following command to setup port forarding for the EAP console:
+Use the following command to setup port forwarding for the EAP console:
+
+.Obtain the IP address for the OSE internal NIC 
+----------
+ssh <ssh_url_to_your_openshift_environment> 'echo $OPENSHIFT_BPMS_IP'
+----------
 
 .Port Forwarding command for JBoss EAP access
 ----------
-ssh -N -L localhost:9990:<ip_address_to_your_openshift_server>:9990 <ssh_url_to_your_openshift_environment>
+ssh -N -L localhost:9990:<ipaddress from previous step>:9990 <ssh_url_to_your_openshift_environment>
 ----------
 
 While the port forwarding process is running, the EAP console may be accessed on the browser at the address `http://localhost:9990/console`
@@ -236,7 +248,7 @@ This reference architecture uses a simple buiness process that prints a conforma
 is available to the business process as a process variable.
 
 To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
-The following provides the deatils for these steps.
+The following provides the details for these steps.
 
 Use the following steps to setup the business process for this reference architecture:
 
@@ -262,7 +274,7 @@ Use the following steps to setup the business process for this reference archite
 Since the port for the *git* protocol is not open on the OpenShift server, the clone operation will use the *ssh* protocol instead.
 
 [start=3]
-. In your local command window, Use a comand, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
+. In your local command window, Use a command, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
 
 ----------
 git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/jmsTransportRA.git
@@ -291,19 +303,102 @@ Use the following steps to create a deployment for the project:
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
 . Select the `Build & Deploy` button.
 . After the build completes, select `Deploy` -> `Deployments`
-. Take note of the deployment Id in the column labled `Deployment`.
+. Take note of the deployment Id in the column labeled `Deployment`.
 .. If you used the values in this document the deployment ID will be `com.gpe.jmsTransport:jmsTransportProj:1.0`.  This value will be used in the client's JMS message.
-
 
 [[Configure_the_JMS_Client]]
 === Configure the JMS Client
+The JMS Client is located in the *loadTest* project of this reference architecture.  It is a single java class that builds an instance of the domain object and
+sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  The name of the class is *LiveServerJMSTest.java*.  It is located under
+the `src` folder in the `com.redhat.gpe.kie.services.client.api` package.
 
+This document will not cover aspects of this client that are common to sending JMS messages,  However, there are a few important details in the client that are 
+specific to this use case that require further explanation.  These details are discussed in the following sections.  Open the client class
+in an editor to view the details along with this discussion.
+
+==== JAXB deserialization
+The client class uses JAXB to serialize the POJOs before sending them via JMS.  The following is required by the client to provide the JAXB context required for serializing
+the POJO on the client side:
+
+.Providing the JAXB context on the client
+----------
+/* -------  Required for proper serialization on the Client side (for the JAXB context) ------- */
+jaxbSerializationProvider.addJaxbClasses(Policy.class);
+----------
+
+On the server side, these objects must be deserialized via JAXB.  For this to occur
+the server must know the type of the object contained within the message.  To provide this information on the server, a special string property is is added to the
+JMS message by the following code.
+ 
+The following code snipped is from the `sendJMSJaxCommandsRequest` method of the class:
+
+.Providing Context for JAXB Deserialization
+----------
+/* ----- Required for deserialization on the server ---------- */
+Set<Class<?>> extraJaxbClasses = new HashSet<Class<?>>();
+extraJaxbClasses.add(Policy.class);
+String extraJaxbClassesPropertyValue = JaxbSerializationProvider.classSetToCommaSeperatedString(extraJaxbClasses);
+msg.setStringProperty(EXTRA_JAXB_CLASSES_PROPERTY_NAME, extraJaxbClassesPropertyValue);
+----------
+
+In this code snipped, *Policy.class* is the class for the POJO object called Policy.  If additional classes were required, then simply add more calls to 
+the `extraJaxbClasses.add` method.  
+
+==== Provide the target for the message
+Once the object has been deserialized on the server, the Execution Server must know which deployment is the target of the message.  For this information,
+another string property is set on the JMS message as shown in the follow code snippet:
+
+.Providing the DeploymentID
+----------
+/* ------- Required for the server to locate the target deployment for the process --------- */
+msg.setStringProperty(DEPLOYMENT_ID_PROPERTY_NAME, deploymentId);
+----------
+
+The value for `deploymentId` is provided as a property in the *pom.xml* file, and initialized in the constructor for this class.
+
+==== BPM Suite 6 command objects
+The client use a BPM Suite 6 command objects to provides a programmatic interface to the JMS API and take care of the underlying details of sending and receiving commands via JMS.
+The following code of the client is used to create the command object for starting a process in BPM Suite 6:
+
+.StartProcess Command object
+----------
+// create the start process command object
+StartProcessCommand cmd = new StartProcessCommand(processId); <1>
+        
+// populate domain model classes
+Policy policyObj = populatePolicyObject();
+cmd.putParameter(POLICY, policyObj);  <2>
+        
+// send the start process command
+JaxbCommandsRequest req = new JaxbCommandsRequest(deploymentId, cmd); <3>
+----------
+<1> The *StartProcessCommand* object is created.  The `processId` of the target process is provided as parameter to the command.
+<2> The call to *putParameter* on the command object is used to provide the payload.
+<3> The StartProcessCommand object is then sent as parameter to the *JaxbCommandRequest* wrapper object.
+
+The StartProcessCommand object is only one of may commands that can be processed by the execution server.  For a complete list of available commands
+see {commands}.
 
 === Execute the use case
+Before executing the test, open the *pom.xml* file and configure the parameters to suite your server.  In particular be sure that the following properties are correct for your environment:
 
+* deploymentId
+* deployment.url
+* userId
+* password
+* processId
 
+Recall that the deploymentId and processId were noted earlier in this process.
 
-== JMS Service Task
+To execute the process do the following:
+
+. Open a command window and ssh into your server instance.
+. Execute `tail -f ~/bpms/standalone/log/server.log` to watch the server log entry during the test
+. If it is not already running, open a command windown and run port forwarding for HornetQ as described in <<HornetQ_port_forwarding,Configure port forwarding for the JMS Broker>>.
+. Open a command window to the loadTest directory and execute `mvn clean test`
+. View the command window of the client to see the message being sent, and the command window of the server to see the message received.
+
+==  JMS Service Task
 The purpose of this custom Work Item Handler is to provide a flexible JMS Service for sending messages via JMS to a JMS Queue or Topic.
 The following are setup details:
 
@@ -393,7 +488,7 @@ Three artifacts have been added to aid in testing the service.
 == Performance Testing
 In the following we measure the system impact when changes are made to configuration paramenters on the JMS interface between BPM Suite 6 and 
 JMS client applications.  Other relevant BPM Suite 6 configuration options are also taken into consideration.
-* Queue sizeing
+* Queue sizing
 * message listener configuration
 * durable vs non-durable queues
 * Single process knowledge session vs process per request

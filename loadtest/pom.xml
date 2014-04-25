@@ -18,15 +18,15 @@
     <!-- *** CHANGE THESE PROPERTIES AS APPROPRIATE  *** -->
 
     <!-- deployment and connectivity settings to remote Execution Server -->
-    <deploymentId>com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0</deploymentId>
+    <deploymentId>com.gpe.jmsTransport:jmsTransportProj:1.0</deploymentId>
     <!-- REMOTE SERVER: <deployment.url>http://bpms-gpetraining.itos.redhat.com/business-central</deployment.url> -->
     <!-- LOCAL 6.0.1 CR2 Server: -->
-    <deployment.url>http://localhost:8080/business-central</deployment.url>
+    <deployment.url>http://bpmsrt-bpmstraining.apps.lab2.opentlc.com/business-central</deployment.url>
     <userId>jboss</userId>
     <!-- REMOTE SERVER PWD: <password>brms</password> -->
     <!-- LOCAL SERVER PWD: -->
-    <password>jbosspw1!</password>
-    <processId>processTier.bpm_jms_exec_server</processId>
+    <password>brms</password>
+    <processId>processTier.printInbound</processId>
 
     <!-- process variables past to policyquote process at start-up -->
     <driverName>azra</driverName>

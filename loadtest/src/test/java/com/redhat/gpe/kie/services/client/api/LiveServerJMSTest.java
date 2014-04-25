@@ -119,6 +119,8 @@ public class LiveServerJMSTest extends TestCase {
 	    this.includePolicyPayload = Boolean.parseBoolean(System.getProperty(INCLUDE_POLICY_PAYLOAD, "TRUE"));
 	
 	    StringBuilder sBuilder = new StringBuilder("system properties =");
+        sBuilder.append("\n\thost : " + _host);
+        sBuilder.append("\n\tport : " + _port);
 	    sBuilder.append("\n\tdeploymentId : "+deploymentId);
 	    sBuilder.append("\n\tdeploymentUrl : "+deploymentUrl);
 	    sBuilder.append("\n\tuserId : "+userId);
@@ -272,8 +274,8 @@ public class LiveServerJMSTest extends TestCase {
     
     @Test
     public void testRemoteJMSApi() {
-      // create the start process command object
-    	StartProcessCommand cmd = new StartProcessCommand(processId);
+        // create the start process command object
+        StartProcessCommand cmd = new StartProcessCommand(processId);
         
      // populate domain model classes
         Policy policyObj = populatePolicyObject();
