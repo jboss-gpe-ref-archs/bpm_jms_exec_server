@@ -8,11 +8,6 @@
   <packaging>kjar</packaging>
   <name>processTier</name>
   <dependencies>
-    <dependency>
-      <groupId>org.acme.insurance</groupId>
-      <artifactId>domain</artifactId>
-      <version>1.0</version>
-    </dependency>
   </dependencies>
   <repositories>
     <repository>

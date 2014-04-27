@@ -1,13 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
-    <artifactId>bpms.modules</artifactId>
+    <artifactId>base</artifactId>
     <packaging>pom</packaging>
     <version>1.0</version>
 
     <properties>
-        <version.org.jboss.spec.jboss.javaee.6.0>3.0.2.Final-redhat-4</version.org.jboss.spec.jboss.javaee.6.0>
-        <version.org.jboss.as>7.2.1.Final-redhat-10</version.org.jboss.as>
+        <!--droolsjbpm.version>6.0.2-redhat-6</droolsjbpm.version -->
         <droolsjbpm.version>6.0.0.Final</droolsjbpm.version>
     </properties>
 

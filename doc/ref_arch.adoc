@@ -87,27 +87,32 @@ The following is a list of pre-requisites:
 . maven 3.0.5 (or greater)
 . git client
 . familiarity with {bpmproduct}
+. proficiency with basic *nix command line
+. proficiency with vi
 
 As is evidenced by these pre-requisites, the assumed BPM Suite 6 runtime environment for this reference architecture 
 documentation is an Openshift Enterprise gear.  However, BPM Suite 6 can be installed in a non-PaaS local environment.  
 Thus it could be possible to execute this reference architecture in a non-PaaS local environment as well.
 
-== JMS Transport configuration and execution
+== Configuration and Execution
 To setup this use case we will take the following major steps:
 
 .Setup Summary
+. Clone this reference architecture
 . Domain class installation
-. Configure queues for BPM Sutie 6 messages
+. Understand BPM Suite 6 message queues
 . Configure port forwarding for the JMS Broker
-. Configure port forwarding for the JBoss EAP console
 . Add the target business process to the server
 . Configure the JMS Client
 . Execute the use case
 
 The details of these steps are provided below.
 
+=== Clone this reference architecture
+This reference architecture will be cloned both in your local computer as well as in your remote BPM Suite 6 Openshift environment.  To clone this reference architecture in your local environment, execute the following:  git clone https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git .  Doing so will create a directory in your local computer called:  _bpm_jms_exec_server_.  For the purposes of the remainder of this reference architecture, this directory will be referred to as _$REF_ARCH_HOME_.
+
 === Domain class installation
-In the top level folder for this reference archtiecture, there is a folder with the name `domain`.  This folder contains a maven project for building and packaging
+In $REF_ARCH_HOME, there is a directory called `domain`.  This directory contains a maven project for building and packaging
 the jar files that will contain the domain classes for this reference architecture.  If you examine the domain classes, you will find that they are configured to
 enable serialization via Java Architecture for XML Binding (JAXB).  There are steps required by the client to enable the server to process the JAXB annotated objects.
 Those details are discussed in the <<Configure_the_JMS_Client,client configuration>> section. 
@@ -115,22 +120,17 @@ Those details are discussed in the <<Configure_the_JMS_Client,client configurati
 The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift. Finally, we will also
 configure the `business-central.war` application in BPM Suite 6 to have a dependency on the static module, making the domain class available to use in your business processes.
 
-From your local cloned copy of this project do the following:
+From your local cloned copy of this reference architecture execute the following:
 
 . create the jar for the domain classes
-.. `cd domain`
+.. `cd $REF_ARCH_HOME`
 .. `mvn clean install`
-.. `cd ..`
 . copy the directories and files required to create a static module on the JBoss EAP server
-.. local:
-... `cp -r domain/conf/org $JBOSS_HOME/modules/system/layers/base`
-... `cp domain/target/domain-1.0.jar $JBOSS_HOME/modules/system/layers/base/org/acme/insurance/main/`
-.. remote:
-... `scp -r domain/conf/org <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/`
-... `scp domain/target/domain-1.0.jar <your_id_on_openshift>@<your_openshift_host>:~/app-root/data/appModules/org/acme/insurance/main/`
-. Add and explicit dependency for business-central.war on the static module for the domain module
+.. `scp -r domain/conf/org <your_openshift_url>:~/app-root/data/appModules/`
+.. `scp domain/target/domain-1.0.jar <your_openshift_url>:~/app-root/data/appModules/org/acme/insurance/main`
+. Add an explicit dependency for business-central.war on the static module for the domain module
 .. `ssh <ssh_url_to_your_openshift_environment>`
-.. In a text editor, open the following file `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
+.. Open the following file using vi:  `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
 .. Add the following to the list of dependencies: `<module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>`
 .. Save the changes to the file
 . Restart your OpenShift BPM Suite 6 instance
@@ -168,8 +168,8 @@ Replaced deployment "business-central.war" with deployment "business-central.war
 
 
 
-=== Configure queues for BPM Suite 6 messages
-When the business-central Workbench is deployed, it automatically creates 3 queues:
+=== Understand BPM Suite 6 Message Queues
+When the business-central Workbench is deployed, the embedded _Execution Server_ begins to listen on the following queues already configured in the Hornetq subsystem:
 
 * jms/queue/KIE.SESSION
 * jms/queue/KIE.TASK
@@ -180,13 +180,9 @@ messages will be then placed on the `KIE.RESPONSE`. Command request messages tha
 should be sent to the `KIE.SESSION` and command request messages that involve managing human tasks, should be sent to the
 `KIE.TASK` queue.
 
-Although there are 2 different input queues, `KIE.SESSION` and `KIE.TASK`, this is only in order to provide multiple
-input queues so as to optimize processing: command request messages will be processed in the same manner regardless of which queue they're sent to.
-However, in some cases, users may send many more requests involving human tasks than requests involving business processes, but then not want the
-processing of business process-related request messages to be delayed by the human task messages. By sending the appropriate command request
-messages to the appropriate queues, this problem can be avoided.
+Messages sent to the two different input queues, `KIE.SESSION` and `KIE.TASK`, will be processed in the same manner regardless of which queue they are sent to.  The reason that two input queues are provided (rather than just one) is to allow for prioritization.  For example, in some cases users may send many more requests involving human tasks than requests involving business processes.  If the business-process related messages are sent to `KIE.SESSION` and the human-task related messages are sent to `KIE.TASK`, then processing of business-process related messages occurs independent of processing of human-task related messages.
 
-The BPM Suite 6 Execution Server uses a Message Driven Bean (MDB) to process messages on the from the queues.  To change the any of the above queues
+The BPM Suite 6 Execution Server uses a Message Driven Bean (MDB) to process messages from the queues.  To change any of the above queues
 to an alternative queue, change the JDNI name in the MDB configuration to point to the desired queue.  The JNDI configuration for the MDB can be found
 at the following location:
 
@@ -195,15 +191,20 @@ at the following location:
 $JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
 ----------
 
-The three default queues are created in HornetQ.  The following file is used to configure the three queue in the EAP server:
+In your remote Openshift environment provisioned with BPM Suite 6, the three business-central queues are already created in the default messaging subsystem: HornetQ. To view them, open your browser to the JBoss EAP management console of your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default .  The following should appear:
 
-.HornetQ Queue configurations for BPM Suite 6
-----------
-business-central.war/WEB-INF/bpms-jms.xml
-----------
+image::images/queues.png[]
 
-For this reference architecture, the default queues will be used, so no steps are required to setup the queues.  However, HornetQ uses port `5445` which is
-not an open port on the OpenShift server.  Therefore port forwarding is configured in the next step to resolve this issue.
+Also, enabled by default in your remote Openshift environment is the messaging configuration: _message-counter-enabled_.  This will prove useful later when executing the included load test to easily visualize real-time messaging statistics per queue.  The overhead of enabling messaging statistics in HornetQ is negligible.
+
+By default, authentication to the Hornetq messaging subsystem is enabled in JBoss EAP 6.  Also, authorization rules are set to restrict only authenticated users with a role of _admin_ the ability to send messages to the BPM Suite 6 queues.  These messaging security settings can be seen by navigating to the following the JBoss EAP management console of your Openshift environment:  Profile -> Subsystems -> Messaging -> Destinations -> default -> Security Settings.
+
+image::images/messaging_security.png[]
+
+The remote Openshift environment provisioned with JBoss EAP and BPM Suite 6 has already been pre-configured to allow for the _jboss_ user to send messages to the BPM Suite 6 queues.  Therefore, your JMS clients sending process-instance and human task related messages to the BPM Suite 6 JMS API should do so as the 'jboss' user. 
+
+HornetQ uses port `5445` which is not an open port on the OpenShift server.
+Therefore port forwarding is configured in the next step to resolve this issue.
 
 [[HornetQ_port_forwarding]]
 === Configure port forwarding for the JMS Broker
@@ -222,51 +223,34 @@ ssh <ssh_url_to_your_openshift_environment> 'echo $OPENSHIFT_BPMS_IP'
 ssh -N -L localhost:5445:<ipaddress from previous step>:5445 <ssh_url_to_your_openshift_environment>
 ----------
 
-While the port forwarding process is running, the HornetQ broker can be access on the local computer at `localhost:5445`.
-Use `Ctrl+c` to kill the process to turn off port forwarding.
-
-=== Configure port forwarding for the JBoss EAP console
-For this reference architecture, access to the EAP console is not strictly required.  However, it may be desirable to access the console to configure alternative
-settings, for JMS Queues for example.  The EAP console runs on port 9990.  Again, this port is not open on the OpenShift server so port forwarding can be used to provide access.
-
-Use the following command to setup port forwarding for the EAP console:
-
-.Obtain the IP address for the OSE internal NIC 
-----------
-ssh <ssh_url_to_your_openshift_environment> 'echo $OPENSHIFT_BPMS_IP'
-----------
-
-.Port Forwarding command for JBoss EAP access
-----------
-ssh -N -L localhost:9990:<ipaddress from previous step>:9990 <ssh_url_to_your_openshift_environment>
-----------
-
-While the port forwarding process is running, the EAP console may be accessed on the browser at the address `http://localhost:9990/console`
+While the port forwarding process is running, the HornetQ broker can be accessed on the local computer at `localhost:5445`.
+Use `Ctrl+c` to kill port forwarding.
 
 === Add the target business process to the server
-This reference architecture uses a simple buiness process that prints a conformation message to confirm that the process was started at that the parameter sent via the JMS message
-is available to the business process as a process variable.
+This reference architecture uses a simple buiness process that prints a confirmation message that indicates that the process instance was started and that the parameter sent via the JMS message is available to the business process as a process variable.
 
 To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
 The following provides the details for these steps.
 
 Use the following steps to setup the business process for this reference architecture:
 
-. Create an *Organization, Repository and Project* in your BPM Suite 6 server
+. Create an *Organization and clone this project's git repository in your BPM Suite 6 server
 .. Select `Authoring` -> `Administration`
 .. Select `Organizational Units` -> `Manage Organizational Units`
 .. Under `Organizational Unit Manager`, select the `Add` button
-.. Enter a name and owner and select `Ok`
-.. Select `Repostories` -> `New Repository`
-.. Add `jmsTransportRA` for the name of your repository and select the organization unit previously made, then select `Create`
-.. Select `Authoring` -> `Project Authoring`
-.. Make sure the `jmsTransportRA` repository is viewable in the `Project Explorer`
+.. Enter a name of _gpe_ and an owner of _jboss_. Click `Ok`
+.. Select `Repostories` -> `New Repository` .  Populate the _Clone Repository_ box as follows and then click _Clone_ :
+
+image::images/clone_repo.png[]
+
+The _Git URL_ is the URL to this git project in github:  _https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_ . Once successfully cloned, BPM Suite 6 will pop-up a new dialogue box with the message:  _The repository is cloned successfully_
+
+
+. View the _processTier_ project in your BPM Suite 6 server
+.. Select `Authoring` -> `Project Authoring `
+.. Make sure the `processTier` repository is viewable in the `Project Explorer`
 ... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
-.. Select `New Item` -> `Project`
-.. Add a project name of `jmsTransportProj`
-.. Select `Ok`
-.. For organization add `com.gpe.jmsTransport`
-.. Select `Finish`
+
 
 [start=2]
 . Open a command window to a directory where you will add the cloned version of the BPM Suite 6 project.

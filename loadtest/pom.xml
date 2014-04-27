@@ -1,34 +1,25 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="utf-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
       <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
-      <artifactId>bpms.modules</artifactId>
+      <artifactId>base</artifactId>
       <version>1.0</version>
       <relativePath>../base/pom.xml</relativePath>
   </parent>
-  
+
   <groupId>com.redhat.gpe.refarch.bpm_jms_exec_server</groupId>
   <artifactId>loadtest</artifactId>
+  <version>1.0</version>
   <packaging>jar</packaging>
+
 
   <properties>
 
-    <!-- *** CHANGE THESE PROPERTIES AS APPROPRIATE  *** -->
-
-    <!-- deployment and connectivity settings to remote Execution Server -->
-    <deploymentId>com.gpe.jmsTransport:jmsTransportProj:1.0</deploymentId>
-    <!-- REMOTE SERVER: <deployment.url>http://bpms-gpetraining.itos.redhat.com/business-central</deployment.url> -->
-    <!-- LOCAL 6.0.1 CR2 Server: -->
-    <deployment.url>http://bpmsrt-bpmstraining.apps.lab2.opentlc.com/business-central</deployment.url>
-    <userId>jboss</userId>
-    <!-- REMOTE SERVER PWD: <password>brms</password> -->
-    <!-- LOCAL SERVER PWD: -->
-    <password>brms</password>
-    <processId>processTier.printInbound</processId>
-
-    <!-- process variables past to policyquote process at start-up -->
+    <!-- process variables used to populate Policy object (which is passed to process instance) -->
     <driverName>azra</driverName>
     <age>23</age>
     <policyType>AUTO</policyType>
@@ -37,48 +28,25 @@
     <vehicleYear>2010</vehicleYear>
     <creditScore>750</creditScore>
 
-    <includePolicyPayload>TRUE</includePolicyPayload>
-    <!-- *********************************************** -->
+    <!-- process.id>processTier.bpm_jms_exec_server</process.id -->
+    <process.id>processTier.printInbound</process.id>
+    <deployment.id>com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0</deployment.id>
 
-    <resteasy.version>2.3.6.Final</resteasy.version>
+    <hornetq.host.addr>localhost</hornetq.host.addr>
+    <hornetq.port>5445</hornetq.port>
+    <hornetq.user>jboss</hornetq.user>
+    <hornetq.password>brms</hornetq.password>
+
+    <ksession.queue.name>KIE.SESSION</ksession.queue.name>
+    <response.queue.name>KIE.RESPONSE</response.queue.name>
+
+    <version.jmeter>2.10</version.jmeter>
+    <version.hornetq>2.2.19.Final</version.hornetq>
+    <version.netty>3.2.6.Final</version.netty>
+    <version.log4j>1.2.17</version.log4j>
   </properties>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.16</version>
-        <configuration>
-          <systemPropertyVariables>
-            <deploymentId>${deploymentId}</deploymentId>
-            <deployment.url>${deployment.url}</deployment.url>
-            <userId>${userId}</userId>
-            <password>${password}</password>
-            <processId>${processId}</processId>
-            <driverName>${driverName}</driverName>
-            <age>${age}</age>
-            <policyType>${policyType}</policyType>
-            <numberOfAccidents>${numberOfAccidents}</numberOfAccidents>
-            <numberOfTickets>${numberOfTickets}</numberOfTickets>
-            <vehicleYear>${vehicleYear}</vehicleYear>
-            <creditScore>${creditScore}</creditScore>
-            <includePolicyPayload>${includePolicyPayload}</includePolicyPayload>
-          </systemPropertyVariables>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
   <dependencies>
-
-    <!-- dependency for domain classes such as Policy, Driver & Rejection -->
-    <dependency>
-       <groupId>org.acme.insurance</groupId>
-       <artifactId>domain</artifactId>
-       <version>1.0</version>
-    </dependency>
-
     <!-- kie/drools/jbpm -->
     <dependency>
        <groupId>org.kie.remote</groupId>
@@ -88,38 +56,137 @@
        <groupId>org.kie</groupId>
        <artifactId>kie-api</artifactId>
     </dependency>
-    <!-- hornetq -->
     <dependency>
-   		<groupId>org.hornetq</groupId>
-  		<artifactId>hornetq-jms</artifactId>
-  		<version>2.2.7.Final</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.hornetq</groupId>
-  		<artifactId>hornetq-core</artifactId>
-  		<version>2.2.13.Final</version>
-  	</dependency>
-  	<!--  netty  -->
-  	<dependency>
-		<groupId>org.jboss.netty</groupId>
-	  	<artifactId>netty</artifactId>
-	  	<version>3.2.6.Final</version>
-	</dependency>
-
-    <!-- test -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-      <version>4.9</version>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-core-client</artifactId>
+      <version>${version.hornetq}</version>
     </dependency>
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <scope>test</scope>
-      <version>1.0.9</version>
+      <groupId>org.hornetq</groupId>
+      <artifactId>hornetq-jms-client</artifactId>
+      <version>${version.hornetq}</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${version.log4j}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jmeter</groupId>
+      <artifactId>ApacheJMeter_java</artifactId>
+      <version>${version.jmeter}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.acme.insurance</groupId>
+      <artifactId>domain</artifactId>
+      <version>1.0</version>
     </dependency>
   </dependencies>
-
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <debug>true</debug>
+          <showWarnings>true</showWarnings>
+          <showDeprecation>true</showDeprecation>
+        </configuration>
+      </plugin>
+      <!-- JA Bride:  add this plugin so that a test jar is created in target/
+                              jmeter will subsequently pick up this jar file
+              -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- jmeter load-test;  usage: mvn clean verify -->
+      <plugin>
+        <groupId>com.lazerycode.jmeter</groupId>
+        <artifactId>jmeter-maven-plugin</artifactId>
+        <version>1.9.0</version>
+        <executions>
+          <execution>
+            <id>jmeter-tests</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jmeter</goal>
+            </goals>
+            <configuration>
+              <propertiesJMeter>
+                <!-- provide jmeter maven plugin with path to compiled java test class -->
+                <search_paths>${basedir}/target</search_paths>
+              </propertiesJMeter>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <propertiesSystem>
+            <hornetq.host.addr>
+            ${hornetq.host.addr}</hornetq.host.addr>
+            <hornetq.port>${hornetq.port}</hornetq.port>
+            <hornetq.user>${hornetq.user}</hornetq.user>
+            <hornetq.password>
+            ${hornetq.password}</hornetq.password>
+            <ksession.queue.name>
+            ${ksession.queue.name}</ksession.queue.name>
+            <response.queue.name>
+            ${response.queue.name}</response.queue.name>
+            <process.id>${process.id}</process.id>
+            <deployment.id>${deployment.id}</deployment.id>
+            <path.to.log4j.xml>
+            ${basedir}/src/test/resources/log4j.xml</path.to.log4j.xml>
+          </propertiesSystem>
+        </configuration>
+        <dependencies>
+          <!-- kie/drools/jbpm -->
+          <dependency>
+            <groupId>org.kie.remote</groupId>
+            <artifactId>kie-services-client</artifactId>
+            <version>${droolsjbpm.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+            <version>${droolsjbpm.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.hornetq</groupId>
+            <artifactId>hornetq-core-client</artifactId>
+            <version>${version.hornetq}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.hornetq</groupId>
+            <artifactId>hornetq-jms-client</artifactId>
+            <version>${version.hornetq}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>${version.netty}</version>
+          </dependency>
+          <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${version.log4j}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.acme.insurance</groupId>
+            <artifactId>domain</artifactId>
+            <version>1.0</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
 </project>
-
