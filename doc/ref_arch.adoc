@@ -103,6 +103,7 @@ To setup this use case we will take the following major steps:
 . Understand BPM Suite 6 message queues
 . Configure port forwarding for the JMS Broker
 . Add the target business process to the server
+. Add the _JmsServiceQueue_
 . Configure the JMS Client
 . Execute the use case
 
@@ -289,6 +290,11 @@ Use the following steps to create a deployment for the project:
 . After the build completes, select `Deploy` -> `Deployments`
 . Take note of the deployment Id in the column labeled `Deployment`.
 .. If you used the values in this document the deployment ID will be `com.gpe.jmsTransport:jmsTransportProj:1.0`.  This value will be used in the client's JMS message.
+
+=== Add the _JmsServiceQueue_
+The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  This business queue (called _JmsServiceQueue_ ) needs to be created in the Hornetq subsystem.  To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> Queues/Topics -> Add .  Populate the dialogue box as follows:
+
+image::images/add_queue.png[]
 
 [[Configure_the_JMS_Client]]
 === Configure the JMS Client
