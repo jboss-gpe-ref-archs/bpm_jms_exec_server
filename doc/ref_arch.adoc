@@ -111,7 +111,7 @@ To setup this use case we will take the following major steps:
 
 The details of these steps are provided below.
 
-=== Clone this reference architecture
+=== Clone this reference architecture in local environment
 This reference architecture will be cloned both in your local computer as well as in your remote BPM Suite 6 Openshift environment.  
 To clone this reference architecture in your local environment, execute the following:  
 
@@ -229,11 +229,12 @@ The remote Openshift environment provisioned with JBoss EAP and BPM Suite 6 has 
 Therefore, your JMS clients sending process-instance and human task related messages to the BPM Suite 6 JMS API should do so as the 'jboss' user. 
 
 HornetQ uses port `5445` which is not an open port on the OpenShift server.
-Therefore port forwarding is configured in the next step to resolve this issue.
+Therefore port forwarding is configured in the next step to expose this port to remote JMS clients.
 
 [[HornetQ_port_forwarding]]
 === Configure port forwarding for the JMS Broker
-The ssh utility allows you to forward a port through the encrypted connection it establishes.  This setup is also referred to as `ssh tunneling`.
+The ssh utility allows you to forward a port through the encrypted connection it establishes.  
+This setup is also referred to as `ssh tunneling`.
 Since port 5445 is not open on the OpenShift server, port forwarding will be configured to securely access these services.
 
 Execute the following commands from your command window on your local computer to configure and launch a port forwarding process for access to HornetQ:
@@ -251,7 +252,7 @@ ssh -N -L localhost:5445:<ipaddress from previous step>:5445 <ssh_url_to_your_op
 While the port forwarding process is running, the HornetQ broker can be accessed on the local computer at `localhost:5445`.
 Use `Ctrl+c` to kill port forwarding.
 
-=== Add the target business process to the server
+=== Clone this reference architecture in BPM Suite 6
 This reference architecture uses a simple buiness process that prints a confirmation message that indicates that the process instance was started and that the parameter sent via the JMS message is available to the business process as a process variable.
 
 To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
@@ -264,17 +265,20 @@ Use the following steps to setup the business process for this reference archite
 .. Select `Organizational Units` -> `Manage Organizational Units`
 .. Under `Organizational Unit Manager`, select the `Add` button
 .. Enter a name of _gpe_ and an owner of _jboss_. Click `Ok`
+. Clone this bpm_jms_exec_server repository in BPM Suite 6
 .. Select `Repostories` -> `New Repository` .  Populate the _Clone Repository_ box as follows and then click _Clone_ :
 
 image::images/clone_repo.png[]
 
-The _Git URL_ is the URL to this git project in github:  _https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_ . Once successfully cloned, BPM Suite 6 will pop-up a new dialogue box with the message:  _The repository is cloned successfully_
+Enter _bpmjmsexecserver_ as the value of the _repository name_.  The _Git URL_ is the URL to this git project in github:  
+
+-----
+_https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_ 
+-----
+
+Once successfully cloned, BPM Suite 6 will pop-up a new dialogue box with the message:  _The repository is cloned successfully_
 
 
-. View the _processTier_ project in your BPM Suite 6 server
-.. Select `Authoring` -> `Project Authoring `
-.. Make sure the `processTier` repository is viewable in the `Project Explorer`
-... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
 
 
 [start=2]
@@ -285,10 +289,15 @@ The _Git URL_ is the URL to this git project in github:  _https://github.com/jbo
 git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/bpmjmsexecserver.git
 ----------
 
-. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  git pull remote master to sync your local repo with your remote Openshift repo.
+. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  _git pull remote master_ .  
+Doing so will sync your local repo with your remote Openshift repo.
 
 
-[start=6]
+=== Review and deploy the *processTier* project
+. View the _processTier_ project in your BPM Suite 6 server
+.. Select `Authoring` -> `Project Authoring `
+.. Make sure the `processTier` repository is viewable in the `Project Explorer`
+... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
 . Find and open the `bpm_jms_exec_server` BPMN2 business process in the Web Designer
 . Open the `Properties` panel for the process and notice the process Id value of `processTier.bpm_jms_exec_server`. This will be used in the client's JMS message.
@@ -302,7 +311,7 @@ Use the following steps to create a deployment for the project:
 . Select the `Build & Deploy` button.
 . After the build completes, select `Deploy` -> `Deployments`
 . Take note of the deployment Id in the column labeled `Deployment`.
-.. If you used the values in this document, then the deployment ID will be `com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0`.  This value will be used in the client's JMS message.
+If you used the values in this document, then the deployment ID will be: `com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0`.  This value will be used in the client's JMS message.
 
 === Add the _JmsServiceQueue_
 The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  
@@ -314,8 +323,11 @@ image::images/add_queue.png[]
 
 [[Configure_the_JMS_Client]]
 === Configure the JMS Client
-The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  It is a single java class that builds an instance of the domain object and
-sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.JMSClient*
+The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  
+It is a java class that builds an instance of the _Policy_ domain object and sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  
+The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.JMSClient*.  
+Note that this class also extends the JMeter AbstractJavaSamplerClient class.
+Use of JMeter with this reference architecture will be discussed in the next section of this documentation.
 
 This document will not cover aspects of this client that are common to sending JMS messages,  However, there are a few important details in the client that are 
 specific to this use case that require further explanation.  These details are discussed in the following sections.  Open the client class
