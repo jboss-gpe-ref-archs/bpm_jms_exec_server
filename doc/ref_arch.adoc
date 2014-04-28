@@ -254,33 +254,22 @@ The _Git URL_ is the URL to this git project in github:  _https://github.com/jbo
 
 
 [start=2]
-. Open a command window to a directory where you will add the cloned version of the BPM Suite 6 project.
-
-Since the port for the *git* protocol is not open on the OpenShift server, the clone operation will use the *ssh* protocol instead.
-
-[start=3]
-. In your local command window, Use a command, structured like the following to make a local clone of your remote repository on the BPM Suite 6 server:
+. Open a command window to your previously cloned $REF_ARCH_HOME/bpm_jms_exec_server directory.
+. Add to this git project a remote reference to the corresponding _bpmjmsexecserver_ repository in your Openshift environment
 
 ----------
-git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/jmsTransportRA.git
+git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/bpmjmsexecserver.git
 ----------
 
-[start=4]
-. From the root directory of this reference architecture, copy the contents of `processTier/src` to the directory created in the previous step
-.. `cp -r processTier/src <path_to_your_clone>/jmsTransportRA/jmsTransportProj/.`
-. Next, commit the changes and push the changes to the remote BPM Suite 6 instance
-.. `git add jmsTransportProj/src`
-.. `git commit -m 'Added the project with the business processes for the reference architecture'`
-.. `git pull`
-.. `git push`
+. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  git pull remote master to sync your local repo with your remote Openshift repo.
 
-At this point, your business process is available on the remote BPM Suite 6 server. 
 
 [start=6]
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
-. Find and open the `pringInbound` business process in the Web Designer
-. Open the `Properties` panel for the process and notice the process Id value of `processTier.printInbound`. This will be used in the client's JMS message.
+. Find and open the `bpm_jms_exec_server` BPMN2 business process in the Web Designer
+. Open the `Properties` panel for the process and notice the process Id value of `processTier.bpm_jms_exec_server`. This will be used in the client's JMS message.
 
+image::images/bpmn.png
 
 Use the following steps to create a deployment for the project:
 
@@ -289,7 +278,7 @@ Use the following steps to create a deployment for the project:
 . Select the `Build & Deploy` button.
 . After the build completes, select `Deploy` -> `Deployments`
 . Take note of the deployment Id in the column labeled `Deployment`.
-.. If you used the values in this document the deployment ID will be `com.gpe.jmsTransport:jmsTransportProj:1.0`.  This value will be used in the client's JMS message.
+.. If you used the values in this document, then the deployment ID will be `com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0`.  This value will be used in the client's JMS message.
 
 === Add the _JmsServiceQueue_
 The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  This business queue (called _JmsServiceQueue_ ) needs to be created in the Hornetq subsystem.  To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> Queues/Topics -> Add .  Populate the dialogue box as follows:
@@ -298,9 +287,8 @@ image::images/add_queue.png[]
 
 [[Configure_the_JMS_Client]]
 === Configure the JMS Client
-The JMS Client is located in the *loadTest* project of this reference architecture.  It is a single java class that builds an instance of the domain object and
-sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  The name of the class is *LiveServerJMSTest.java*.  It is located under
-the `src` folder in the `com.redhat.gpe.kie.services.client.api` package.
+The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  It is a single java class that builds an instance of the domain object and
+sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.JMSClient*
 
 This document will not cover aspects of this client that are common to sending JMS messages,  However, there are a few important details in the client that are 
 specific to this use case that require further explanation.  These details are discussed in the following sections.  Open the client class
@@ -344,7 +332,7 @@ another string property is set on the JMS message as shown in the follow code sn
 msg.setStringProperty(DEPLOYMENT_ID_PROPERTY_NAME, deploymentId);
 ----------
 
-The value for `deploymentId` is provided as a property in the *pom.xml* file, and initialized in the constructor for this class.
+The value for `deploymentId` is provided as a property in the *$REF_ARCH_HOME/loadtest/pom.xml* file, and initialized in the constructor for this class.
 
 ==== BPM Suite 6 command objects
 The client use a BPM Suite 6 command objects to provides a programmatic interface to the JMS API and take care of the underlying details of sending and receiving commands via JMS.
@@ -372,21 +360,36 @@ see {commands}.
 === Execute the use case
 Before executing the test, open the *pom.xml* file and configure the parameters to suite your server.  In particular be sure that the following properties are correct for your environment:
 
+* process.id
 * deploymentId
-* deployment.url
-* userId
-* password
-* processId
-
-Recall that the deploymentId and processId were noted earlier in this process.
+* hornetq.host
+* hornetq.user
+* hornetq.password
 
 To execute the process do the following:
 
 . Open a command window and ssh into your server instance.
 . Execute `tail -f ~/bpms/standalone/log/server.log` to watch the server log entry during the test
 . If it is not already running, open a command windown and run port forwarding for HornetQ as described in <<HornetQ_port_forwarding,Configure port forwarding for the JMS Broker>>.
-. Open a command window to the loadTest directory and execute `mvn clean test`
-. View the command window of the client to see the message being sent, and the command window of the server to see the message received.
+. Open a command window to the $REF_ARCH_HOME/loadTest directory and execute:  `mvn clean verify`
+
+=== View results
+* The server.log of your remote BPM Suite 6 enabled Openshift Environment should include statements similar to the following:
+
+-------
+[com.redhat.gpe.refarch.bpm_jms_exec_server.processTier.JMSWorkItemHandler]  Sending messageContent: Driver  properties =
+    driverName : alex
+    dlNumber : 7
+    age : 21
+    # accidents : 0
+    # tickets : 1
+    SSN : 555-55-555
+    # creditScore : 800
+-------
+
+* Also, in the JBoss EAP Management Console, notice that JMS messages have begun to accumulate in the previously configured _JmsServiceQueue_ :
+
+image::images/message_stats.png
 
 ==  JMS Service Task
 The purpose of this custom Work Item Handler is to provide a flexible JMS Service for sending messages via JMS to a JMS Queue or Topic.
@@ -417,40 +420,11 @@ Each component in the diagram plays a role in the execution of the use case and 
 == JMS Service Task use and configuration
 
 
-
-
-=== Adding the WIH to JBoss EAP 6
-The work item handler comes in a jar file that is deployed to JBoss EAP 6 as a static module in JBoss Modules.  To do this do the following steps.
-
-. Shutdown JBoss EAP 6
-. compile the project to build the class file
-.. navigate to the JMSWIH project file
-.. execute `mvn clean package`
-. The jar file is now located in the `target` directory of the project.
-. Add additional folders to create the following directory: `$JBOSS_HOME/modules/system/layers/bpms/org/gpe/service/jms/main`
-. Copy the jar file from the target directory to `$JBOSS_HOME/modules/system/layers/bpms/org/gpe/service/jms/main
-. Copy the `module.xml` file from the `JMSWIH\savemodule` folder to the same target directory
-. Open the following file in a editor: `$JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
-. Add the following as a new entry in the list of dependencies: `<module name="org.gpe.service.jms"/>`
-. Save the file and restart the server
-
-=== Setup the Queue
-The service will write messages to a Queue. You can use the `ConfigureJMS.cli` CLI script in the `cliScript` folder to setup the queue.  Execute
-the script with the following command:
-
-.From your $JBOSS_HOME folder
-----------
-./bin/jboss-cli.sh --file=/<your path>/insurancepolicy/cliScript/ConfigureJMS.cli
----------- 
-
-You can use the other script to check the status of the queue.
-
-
 === Adding the registration for the WIH
-To register the Work Item Handler it must be registered with the process engine.  To do this we and an entry into kmodule.xml as follows
+To register the Work Item Handler it must be registered with the process engine.  This is done via the project kmodule.xml as follows:
 
-. Within Business-central naviage to the `kmodule.xml` file. (under resources/META-INF)
-. add the following:
+. Within Business-central navigate to the `kmodule.xml` file. (under resources/META-INF)
+. Notice the following has already been added:
 
 ----------
 <kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -464,17 +438,6 @@ To register the Work Item Handler it must be registered with the process engine.
 </kmodule>
 ----------
 
-. Be sure to `save` the change.
-. It seems to be necessary to restart the server after making a change to the kmodule.xml file.  Do this `before` doing a build and deploy.
-
-=== Testing the service
-Three artifacts have been added to aid in testing the service.
-
-- *TestJMSServiceTask* is a simple business process that uses the JMS service.
-- *startTestJMSServiceBP* is a rule that simply starts the business process.
-- *StartTheJMSServiceTest* is a test scenario that can be used to start to kick off the rule.
- 
-
 == Performance Testing
 In the following we measure the system impact when changes are made to configuration paramenters on the JMS interface between BPM Suite 6 and 
 JMS client applications.  Other relevant BPM Suite 6 configuration options are also taken into consideration.
@@ -482,9 +445,3 @@ JMS client applications.  Other relevant BPM Suite 6 configuration options are a
 * message listener configuration
 * durable vs non-durable queues
 * Single process knowledge session vs process per request
-
-
-
-
-.Tiger block image
-image::images/tiger.png[Tiger image]

@@ -28,9 +28,9 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <vehicleYear>2010</vehicleYear>
     <creditScore>750</creditScore>
 
-    <!-- process.id>processTier.bpm_jms_exec_server</process.id -->
-    <process.id>processTier.printInbound</process.id>
-    <deployment.id>com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0</deployment.id>
+    <process.id>processTier.bpm_jms_exec_server</process.id>
+    <!-- process.id>processTier.printInbound</process.id -->
+    <deploymentId>com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0</deploymentId>
 
     <hornetq.host.addr>localhost</hornetq.host.addr>
     <hornetq.port>5445</hornetq.port>
@@ -143,7 +143,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <response.queue.name>
             ${response.queue.name}</response.queue.name>
             <process.id>${process.id}</process.id>
-            <deployment.id>${deployment.id}</deployment.id>
+            <deploymentId>${deploymentId}</deploymentId>
             <path.to.log4j.xml>
             ${basedir}/src/test/resources/log4j.xml</path.to.log4j.xml>
           </propertiesSystem>

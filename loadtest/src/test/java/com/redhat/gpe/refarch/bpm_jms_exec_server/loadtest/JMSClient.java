@@ -29,6 +29,8 @@ import org.kie.services.client.serialization.jaxb.impl.JaxbCommandsResponse;
 import org.kie.services.client.serialization.jaxb.impl.process.JaxbProcessInstanceResponse;
 import org.drools.core.command.runtime.process.StartProcessCommand;
 
+import org.kie.services.client.serialization.jaxb.rest.JaxbExceptionResponse;
+
 import org.acme.insurance.Policy;
 import org.acme.insurance.Driver;
 
@@ -39,7 +41,7 @@ public final class JMSClient extends AbstractJavaSamplerClient {
 
     private static final String KSESSION_QUEUE_NAME = "ksession.queue.name";
     private static final String RESPONSE_QUEUE_NAME = "response.queue.name";
-    private static final String DEPLOYMENT_ID = "deployment.id";
+    private static final String DEPLOYMENT_ID = "deploymentId";
     private static final String PROCESS_ID = "process.id";
 
     public static final String DRIVER_NAME = "driverName";
@@ -145,13 +147,19 @@ public final class JMSClient extends AbstractJavaSamplerClient {
 
             // parse response for processInstanceId
             JaxbCommandResponse<?> cmdResponse = jaxbResponse.getResponses().get(0);
-            ProcessInstance procInst = (ProcessInstance) cmdResponse;
-            long pInstanceId = procInst.getId();
-            log.info("runTest() just created new process instance with id = "+pInstanceId);
+            if(cmdResponse != null && (cmdResponse instanceof JaxbExceptionResponse)) {
+                log.error("runTest() cmdResponse = "+((JaxbExceptionResponse)cmdResponse).getStackTrace());
+                result.setResponseMessage(((JaxbExceptionResponse)cmdResponse).getStackTrace());
+                result.setSuccessful(false);
+            }else {
+                ProcessInstance procInst = (ProcessInstance) cmdResponse;
+                long pInstanceId = procInst.getId();
+                log.info("runTest() just created new process instance with id = "+pInstanceId);
+                result.setResponseMessage(SUCCESS_MESSAGE+" : pInstanceId = "+pInstanceId);
+                result.setSuccessful(true);
+                result.setResponseCodeOK();
+            }
 
-            result.setResponseMessage(SUCCESS_MESSAGE+" : pInstanceId = "+pInstanceId);
-            result.setSuccessful(true);
-            result.setResponseCodeOK();
         }catch(Throwable x){
             StringWriter sw = new StringWriter();
             x.printStackTrace(new PrintWriter(sw));
@@ -197,6 +205,7 @@ public final class JMSClient extends AbstractJavaSamplerClient {
             // receive
             Message response = consumer.receive(QUALITY_OF_SERVICE_THRESHOLD_MS);
 
+            xmlStr = ((BytesMessage) response).readUTF();
             JaxbCommandsResponse cmdResponse = (JaxbCommandsResponse) jaxbSerializationProvider.deserialize(xmlStr);
             return cmdResponse;
         } finally {
