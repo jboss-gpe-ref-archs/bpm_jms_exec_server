@@ -5,6 +5,7 @@
 :bpmproduct: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/[Red Hat's BPM Suite 6 product]
 :osetools: link:https://access.redhat.com/site/documentation/en-US/OpenShift_Enterprise/2/html-single/Client_Tools_Installation_Guide/index.html[Openshift Enterprise client tools]
 :commands: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/6.0/html-single/Development_Guide/index.html#Execute_calls[BPM Suite 6 Commands]
+:maven: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/6.0/html-single/Development_Guide/index.html#sect-Learn_about_Maven[Learn about Maven]
 
 image::images/rhheader.png[width=900]
 
@@ -32,13 +33,20 @@ Message queues are a vital component to many application architectures.  Any tim
 that they will differ in processing speed and availability.  This leads to the need for asynchronous communication to decouple the sender from the receiver.  This decoupling
 has numerous benefits to the overall system including:
 
-. *Decoupling* - The two systems can be extended and modified independently as long as they adhere to the same interface requirements
-. *Redundancy* - The message may be held safely in the queue until the receiver is able to process the message without errors.
-. *Scalability* - 
-. *Resiliency* -
-. *Delivery Guarantees* - 
-. *Ordering Guarantees* - 
-. *Buffering* - 
+. *Decoupling* - The two systems can be extended and modified independently as long as they adhere to the same interface requirements.  The JMS API provides
+a well-known interface allowing for significant flexibility for how the two connected systems may be managed.
+. *Redundancy* - The message may be held safely in the queue until the receiver is able to process the message without errors.  The queue safely holds onto
+the request in the message until the the process explicitly indicates that the message has been received and processed.
+. *Scalability* - Scaling with JMS is straight-forward.  If messages are being processed too slowly, simply add more processes to receive and process the messages.
+. *Resiliency* - If the message receiving process fails, crashes, or is just down for maintenance, the decoupling provided by the JMS interface allows the message
+producer to continue, unharmed by the the issues on consumer.
+. *Delivery Guarantees* - The redundancy provided by JMS means that message delivery is guaranteed.  In many cases, queues are configured to be durable; their state
+is even guaranteed to survive a server crash on the JMS broker, because messages are saved to a storage device.
+. *Ordering Guarantees* - Various options are available for controlling the ordering of messages received from a queue, however the most common configuration is to provide
+the messages in FIFO order (First In, First Out).
+. *Buffering* - BPM is particularly well-suited for handling long-running business processes.  While a message producer may produce many messages in a day, a long-running business
+process may have numerous wait-states and thus could take days to process.  It is critical that messages from producer systems are queued for processing when
+consumer processing resources become available.
 
 The JMS API can be used in two directions with respect to BPM Suite 6. First a JMS message may be sent to the BPM Suite 6 server to start a process.  Second
 a BPM Suite 6 process may need to send a JMS message to a topic or queue.  Both of these cases are are addressed in this reference architecture.
@@ -56,27 +64,50 @@ image::images/jms_transport_arch_diagram.png[width="60%"]
 Each component in the diagram plays a role in the execution of the use case and is discussed roughly in the order of execution of the use case.
 
 === Client JVM
-
+The client JVM typically runs on separate hardware from the server JVM.
 
 === JMS Client
-
+The JMS client has access to the domain classes as dependency. System properties forthe client are read from the the pom.xml file associated with the client's project.
+In addition the client has dependencies on the HornetQ client libraries for making connections with the HornetQ broker.
 
 === pom.xml
-
+The pom.xml file contains a plugin for Jmeter allowing the JMeter tests to be run by issuing a Maven build command of `mvn clean verify`.
+The pom.xml file also contains the values for numerous properties used by the client.
 
 === Domain
-
+The domain is a library of POJO object that define the business objects used by the use case.  In this case the domain classes are `Driver` and `Policy`.
+The domain library must be made available to the client, as a standard Maven dependency.  It is also made available to the server as a static module.
 
 === HornetQ
-
+HornetQ is the default JMS broker available on JBoss EAP.  For this reference architecture, four queues are defined in HornetQ.  These will be viewable
+via the JBoss EAP console as described below.
 
 === Maven Repository
-
+Apache Maven is a distributed build automation tool used in Java application development to create, manage, and build software projects. Maven uses standard configuration files called Project Object Model, or POM, files to define projects and manage the build process. POMs describe the module and component dependencies, build order, and targets for the resulting project packaging and output using an XML file. This ensures that the project is built in a correct and uniform manner. For more information on Maven see {maven}.
 
 === Execution Server
-
+The Execution Server exposes BPM Suite 6 functionality as a service.  Clients can interact with the BPM Suite 6 execution server via either REST or JMS.
+For this reference architecture the Execution Server is the component that enables access to the process engine via JMS. 
 
 === BPM Suite 6 Process Engine
+
+==  JMS Service Task
+The purpose of this custom Work Item Handler is to provide a flexible JMS Service for sending messages via JMS to a JMS Queue or Topic, from a business process.
+
+The following architecture diagram illustrates the components required for the JMS Service Task.
+
+.JMS Service Task Architecture Diagram
+image::images/JMS_WIH_arch_diagram.png[width="60%"]
+
+Many of the components here have already been discussed in the previous section.  The additional components required by the JMS service task are discussed below.
+
+=== JMS Service WIH
+When a process instance is created that contains a JMS Service Task, the process engine will create an instance of the work item handler assigned to that service task.
+In this case that class is the JMSWorkItemHandler(WIH). This class is deployed as part of the Kmodule deployment as discussed below.
+
+=== JMS Broker
+The JMS service does an JNDI lookup to find the JMS broker for sending messages.  In the case of this reference architecture, that JMS broker is the HornetQ JMS broker 
+that comes bundled with JBoss EAP 6.  As discussed below, this may be reconfigured to point to the JMS broker of your choice.
 
 == Pre-Requisites
 The remainder of this documentation provides instructions for installation, configuration and execution of this reference architecture.  
@@ -97,7 +128,7 @@ documentation is an Openshift Enterprise gear.  However, BPM Suite 6 can be inst
 Thus it could be possible to execute this reference architecture in a non-PaaS local environment as well.
 
 == Configuration and Execution
-To setup this use case we will take the following major steps:
+The following major steps are required to setup this use case.  The sections to follow will review these steps in detail.
 
 .Setup Summary
 . Clone this reference architecture
@@ -141,7 +172,7 @@ From your local cloned copy of this reference architecture execute the following
 .. `scp -r domain/conf/org <your_openshift_url>:~/app-root/data/appModules/`
 .. `scp domain/target/domain-1.0.jar <your_openshift_url>:~/app-root/data/appModules/org/acme/insurance/main`
 . Add an explicit dependency for business-central.war on the static module for the domain module
-.. `ssh <ssh_url_to_your_openshift_environment>`
+.. `ssh <your_openshift_url>`
 .. Open the following file using vi:  `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
 .. Add the following to the list of dependencies: 
 
@@ -149,7 +180,8 @@ From your local cloned copy of this reference architecture execute the following
 <module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>
 -----
 
-.. Save the changes to the file
+[start=4]
+. Save the changes to the file
 . Restart your OpenShift BPM Suite 6 instance
 .. Determine if the JBoss process is already running by entering: `ps -aef | grep java`
 ... If the JBoss process is not running, then execute: `ctl_app start`
@@ -183,8 +215,6 @@ Alternatively, you may get the following message:
 Replaced deployment "business-central.war" with deployment "business-central.war"
 ----------
 
-
-
 === Understand BPM Suite 6 Message Queues
 When the business-central Workbench is deployed, the embedded _Execution Server_ begins to listen on the following queues already configured in the Hornetq subsystem:
 
@@ -196,7 +226,7 @@ The `KIE.SESSION` and `KIE.TASK` queues should be used to send command request m
 Command response messages will be then placed on the `KIE.RESPONSE` queue. 
 Command request messages that involve starting and managing business processes should be sent to the `KIE.SESSION` and command request messages that involve managing human tasks, should be sent to the `KIE.TASK` queue.
 
-Messages sent to the two different input queues, `KIE.SESSION` and `KIE.TASK`, will be processed in the same manner regardless of which queue they are sent to.  The reason that two input queues are provided (rather than just one) is to allow for prioritization.  
+Messages sent to the two different input queues, `KIE.SESSION` and `KIE.TASK`, will be processed in the same manner regardless of which queue they are sent to.  The reason that two input queues are provided (rather than just one) is to allow for messages to be prioritized with more control.  
 For example, in some use-cases, clients may send many more requests involving human tasks than requests involving business processes.  
 If the business-process related messages are sent to `KIE.SESSION` and the human-task related messages are sent to `KIE.TASK`, then processing of business-process related messages occurs independent of processing of human-task related messages.
 
@@ -210,7 +240,7 @@ $JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
 ----------
 
 In your remote Openshift environment provisioned with BPM Suite 6, the three business-central queues are already created in the default messaging subsystem: HornetQ. 
-To view them, open your browser to the JBoss EAP management console of your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default .  
+To view them, open your browser to the JBoss EAP management console `(http://<your_openshift_host>/console/App.html)` of your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default .  
 The following should appear:
 
 image::images/queues.png[]
@@ -253,7 +283,7 @@ While the port forwarding process is running, the HornetQ broker can be accessed
 Use `Ctrl+c` to kill port forwarding.
 
 === Clone this reference architecture in BPM Suite 6
-This reference architecture uses a simple buiness process that prints a confirmation message that indicates that the process instance was started and that the parameter sent via the JMS message is available to the business process as a process variable.
+This reference architecture uses a simple business process that prints a confirmation message that indicates that the process instance was started and that the parameter sent via the JMS message is available to the business process as a process variable.
 
 To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
 The following provides the details for these steps.
@@ -266,17 +296,17 @@ Use the following steps to setup the business process for this reference archite
 .. Under `Organizational Unit Manager`, select the `Add` button
 .. Enter a name of _gpe_ and an owner of _jboss_. Click `Ok`
 . Clone this bpm_jms_exec_server repository in BPM Suite 6
-.. Select `Repostories` -> `New Repository` .  Populate the _Clone Repository_ box as follows and then click _Clone_ :
+.. Select `Repositories` -> `Clone Repository` .  Populate the _Clone Repository_ box as follows and then click _Clone_ :
 
 image::images/clone_repo.png[]
 
 Enter _bpmjmsexecserver_ as the value of the _repository name_.  The _Git URL_ is the URL to this git project in github:  
 
 -----
-_https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_ 
+https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git 
 -----
 
-Once successfully cloned, BPM Suite 6 will pop-up a new dialogue box with the message:  _The repository is cloned successfully_
+Once successfully cloned, BPM Suite 6 will pop-up a new dialog box with the message:  _The repository is cloned successfully_
 
 
 
@@ -286,28 +316,28 @@ Once successfully cloned, BPM Suite 6 will pop-up a new dialogue box with the me
 . Add to this git project a remote reference to the corresponding _bpmjmsexecserver_ repository in your Openshift environment
 
 ----------
-git clone ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/bpmjmsexecserver.git
+git remote add oserepo ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/bpmjmsexecserver.git
 ----------
 
-. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  _git pull remote master_ .  
+[start=4]
+. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  _git pull oserepo master_ .  
 Doing so will sync your local repo with your remote Openshift repo.
-
 
 === Review and deploy the *processTier* project
 . View the _processTier_ project in your BPM Suite 6 server
-.. Select `Authoring` -> `Project Authoring `
+.. Select `Authoring` -> `Project Authoring`
 .. Make sure the `processTier` repository is viewable in the `Project Explorer`
 ... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
 . Find and open the `bpm_jms_exec_server` BPMN2 business process in the Web Designer
 . Open the `Properties` panel for the process and notice the process Id value of `processTier.bpm_jms_exec_server`. This will be used in the client's JMS message.
 
-image::images/bpmn.png
+image::images/bpmn.png[width="40%"]
 
 Use the following steps to create a deployment for the project:
 
 [start=9]
-. From within the business-central workbench, select `Authoring` -> `Project Authoring`
+. From within the business-central workbench, select `Tools` -> `Project Editor`
 . Select the `Build & Deploy` button.
 . After the build completes, select `Deploy` -> `Deployments`
 . Take note of the deployment Id in the column labeled `Deployment`.
@@ -317,7 +347,7 @@ If you used the values in this document, then the deployment ID will be: `com.re
 The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  
 This business queue (called _JmsServiceQueue_ ) needs to be created in the Hornetq subsystem.  
 To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> Queues/Topics -> Add .  
-Populate the dialogue box as follows:
+Populate the dialog box as follows:
 
 image::images/add_queue.png[]
 
@@ -325,7 +355,7 @@ image::images/add_queue.png[]
 === Configure the JMS Client
 The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  
 It is a java class that builds an instance of the _Policy_ domain object and sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  
-The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.JMSClient*.  
+The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.loadtest.JMSClient*.  
 Note that this class also extends the JMeter AbstractJavaSamplerClient class.
 Use of JMeter with this reference architecture will be discussed in the next section of this documentation.
 
@@ -397,7 +427,7 @@ The StartProcessCommand object is only one of may commands that can be processed
 see {commands}.
 
 === Execute the use case
-Before executing the test, open the *pom.xml* file and configure the parameters to suite your server.  In particular be sure that the following properties are correct for your environment:
+Before executing the test, open the *loadtest/pom.xml* file and configure the parameters to suite your server.  In particular be sure that the following properties are correct for your environment:
 
 * process.id
 * deploymentId
@@ -409,7 +439,7 @@ To execute the process do the following:
 
 . Open a command window and ssh into your server instance.
 . Execute `tail -f ~/bpms/standalone/log/server.log` to watch the server log entry during the test
-. If it is not already running, open a command windown and run port forwarding for HornetQ as described in <<HornetQ_port_forwarding,Configure port forwarding for the JMS Broker>>.
+. If it is not already running, open a command window and run port forwarding for HornetQ as described in <<HornetQ_port_forwarding,Configure port forwarding for the JMS Broker>>.
 . Open a command window to the $REF_ARCH_HOME/loadTest directory and execute:  `mvn clean verify`
 
 === View results
@@ -426,38 +456,14 @@ To execute the process do the following:
     # creditScore : 800
 -------
 
-* Also, in the JBoss EAP Management Console, notice that JMS messages have begun to accumulate in the previously configured _JmsServiceQueue_ :
+* Also, in the JBoss EAP Management Console, navigate to Runtime -> JMS Destinations -> JmsServiceQueue, and  notice that JMS messages have begun to accumulate in the previously configured _JmsServiceQueue_ :
 
-image::images/message_stats.png
+image::images/message_stats.png[]
 
-==  JMS Service Task
-The purpose of this custom Work Item Handler is to provide a flexible JMS Service for sending messages via JMS to a JMS Queue or Topic.
-The following are setup details:
-
-The following architecture diagram illustrates the components discussed below.
-
-.JMS Service Task Architecture Diagram
-image::images/JMS_WIH_arch_diagram.png[width="60%"]
-
-Each component in the diagram plays a role in the execution of the use case and is discussed roughly in the order of execution of the use case.
-
-=== Maven Repository
-
-
-=== BPM Suite 6 Process Engine
-
-
-=== JMS Service WIH
-
-
-=== Domain
-
-
-=== JMS Broker
 
 
 == JMS Service Task use and configuration
-
+The configuration of the Service Task has already been completed.  However, the following is important to understand concerning how to add custom work item handlers in BPM Suite 6.
 
 === Adding the registration for the WIH
 To register the Work Item Handler it must be registered with the process engine.  This is done via the project kmodule.xml as follows:
@@ -477,8 +483,13 @@ To register the Work Item Handler it must be registered with the process engine.
 </kmodule>
 ----------
 
+=== Adding the WIH to the classpath
+Also within Business-central, navigate the project folders to `com.redhat.gpe.refarch.bpm_jms_exec_server.processTier`.  Click on `Java Source Files` in the project assets pain.
+There you will find the `JMSWorkItemHandler` implementation file.  This work item implementation file is included in the kjar deployment.  As of version 6.0.1 of BPM Suite 6, this
+file must be included in the kjar.  It will not be found if added as a static module.
+
 == Performance Testing
-In the following we measure the system impact when changes are made to configuration paramenters on the JMS interface between BPM Suite 6 and 
+In the following we measure the system impact when changes are made to configuration parameters on the JMS interface between BPM Suite 6 and 
 JMS client applications.  Other relevant BPM Suite 6 configuration options are also taken into consideration.
 * Queue sizing
 * message listener configuration
