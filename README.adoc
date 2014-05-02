@@ -1,5 +1,6 @@
 :data-uri:
 :toc2:
+:ref_arch_doc: link:doc/ref_arch.adoc[project documentation]
 
 :numbered!:
 
@@ -14,7 +15,7 @@ For the purposes of this reference architecture, the target run-time environment
 gear in OpenShift.  With minimal changes, this reference architecture could also be applied tp a BPM Suite 6
 environment provisioned in a local, non-PaaS environment as well.
 
-This reference architecture includes the following manual:  docs/ref_arch.adoc .
+This reference architecture includes the following manual {ref_arch_doc} .
 This reference architecture also includes both client and server-side source code to a scenario called
 _policyQuote_.  This _policyQuote_ scenario is referenced throughout the manual for this reference
 architecture.
