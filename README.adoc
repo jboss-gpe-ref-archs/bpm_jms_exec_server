@@ -1,6 +1,8 @@
 :data-uri:
 :toc2:
-:ref_arch_doc: link:doc/ref_arch.adoc[project documentation]
+:ref_arch_doc: link:doc/ref_arch.adoc[manual]
+
+image::doc/images/rhheader.png[width=900]
 
 image::doc/images/rhheader.png[width=900]
 
@@ -17,7 +19,6 @@ For the purposes of this reference architecture, the target run-time environment
 gear in OpenShift.  With minimal changes, this reference architecture could also be applied tp a BPM Suite 6
 environment provisioned in a local, non-PaaS environment as well.
 
-This reference architecture includes the following manual {ref_arch_doc} .
-This reference architecture also includes both client and server-side source code to a scenario called
-_policyQuote_.  This _policyQuote_ scenario is referenced throughout the manual for this reference
-architecture.
+This reference architecture includes the following {ref_arch_doc} and also includes both client and server-side source code to a scenario called _policyQuote_.  
+This _policyQuote_ scenario is referenced throughout the manual.
+A load test harness (based on JMeter) is included to allow for the ability to observe the behavior and stability of the BPM Suite 6 product under peak load conditions.
