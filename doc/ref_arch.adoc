@@ -15,12 +15,13 @@ image::images/rhheader.png[width=900]
 This reference architecture provides a detailed example of how to configure and use the JMS API of the BPM Suite 6 Execution Server.
 Along with the explanation, a project is provided with instructions on how to execute the example.
 
-This reference architecture provides two major use cases related to JMS and BPM Suite 6 and one utility use case.  The two major use case are the following:
+This reference architecture provides two major use cases related to JMS and BPM Suite 6 and one utility use case.  The two major use case are as follows:
 
 . `JMS Transport` - Starting a BPM Suite 6 process via a JMS transport.  The use case includes passing parameters to the BPM Suite 6 process and receiving a confirmation response from BPM Suite 6.
 . `JMS Service Task` - Sending a JMS message from a BPM Suite 6 process.
 
-The utility use case uses JMeter to perform load tests against the JMS transport.  The term `utility use case` is used because it is not functionality that to be used in an application, yet it provides vital information for building applications.  
+The utility use case uses JMeter to perform load tests against the JMS transport.  
+The term `utility use case` is used because it is not functionality that is to be used in an application.
 
 The following discusses when it is necessary to use these use cases, how the examples work, and how to configure the examples to run on your own system.
 
@@ -67,7 +68,8 @@ Each component in the diagram plays a role in the execution of the use case and 
 The client JVM typically runs on separate hardware from the server JVM.
 
 === JMS Client
-The JMS client has access to the domain classes as dependency. System properties forthe client are read from the the pom.xml file associated with the client's project.
+The JMS client has access to the domain classes as dependencies. 
+System properties for the client are read from the the pom.xml file associated with the client's project.
 In addition the client has dependencies on the HornetQ client libraries for making connections with the HornetQ broker.
 
 === pom.xml
@@ -75,12 +77,12 @@ The pom.xml file contains a plugin for Jmeter allowing the JMeter tests to be ru
 The pom.xml file also contains the values for numerous properties used by the client.
 
 === Domain
-The domain is a library of POJO object that define the business objects used by the use case.  In this case the domain classes are `Driver` and `Policy`.
+The domain is a library of POJO objects that define the business objects used by the use case.  In this case the domain classes are `Driver` and `Policy`.
 The domain library must be made available to the client, as a standard Maven dependency.  It is also made available to the server as a static module.
 
 === HornetQ
-HornetQ is the default JMS broker available on JBoss EAP.  For this reference architecture, four queues are defined in HornetQ.  These will be viewable
-via the JBoss EAP console as described below.
+HornetQ is the default JMS broker available on JBoss EAP.  For this reference architecture, four queues are defined in HornetQ.  
+These will be viewable via the JBoss EAP console as described below.
 
 === Maven Repository
 Apache Maven is a distributed build automation tool used in Java application development to create, manage, and build software projects. Maven uses standard configuration files called Project Object Model, or POM, files to define projects and manage the build process. POMs describe the module and component dependencies, build order, and targets for the resulting project packaging and output using an XML file. This ensures that the project is built in a correct and uniform manner. For more information on Maven see {maven}.
@@ -160,8 +162,8 @@ If you examine the domain classes, you will find that they are configured to ena
 There are steps required by the client to enable the server to process the JAXB annotated objects.
 Those details are discussed in the <<Configure_the_JMS_Client,client configuration>> section. 
 
-The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift. Finally, we will also
-configure the `business-central.war` application in BPM Suite 6 to have a dependency on the static module, making the domain class available to use in your business processes.
+The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift.
+The `business-central.war` application in BPM Suite 6 will also be configured to have a dependency on the static module, making the domain class available to use in your business processes.
 
 From your local cloned copy of this reference architecture execute the following:
 
@@ -240,7 +242,7 @@ $JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
 ----------
 
 In your remote Openshift environment provisioned with BPM Suite 6, the three business-central queues are already created in the default messaging subsystem: HornetQ. 
-To view them, open your browser to the JBoss EAP management console `(http://<your_openshift_host>/console/App.html)` of your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default .  
+To view them, open your browser to the JBoss EAP management console `(http://<your_openshift_host>/console/App.html)` of your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> View .  
 The following should appear:
 
 image::images/queues.png[]
@@ -283,12 +285,9 @@ While the port forwarding process is running, the HornetQ broker can be accessed
 Use `Ctrl+c` to kill port forwarding.
 
 === Clone this reference architecture in BPM Suite 6
-This reference architecture uses a simple business process that prints a confirmation message that indicates that the process instance was started and that the parameter sent via the JMS message is available to the business process as a process variable.
+This reference architecture uses a simple business process that includes a _Service Task_ that places a message on a JMS business queue.
 
-To setup the business process, setup the repository on BPM Suite 6, make a local clone, add the project to your clone, then use a git push to update the remote BPM Suite 6 server.
-The following provides the details for these steps.
-
-Use the following steps to setup the business process for this reference architecture:
+Use the following steps to clone this reference architecture in BPM Suite 6:
 
 . Create an *Organization and clone this project's git repository in your BPM Suite 6 server
 .. Select `Authoring` -> `Administration`
@@ -346,7 +345,7 @@ If you used the values in this document, then the deployment ID will be: `com.re
 === Add the _JmsServiceQueue_
 The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  
 This business queue (called _JmsServiceQueue_ ) needs to be created in the Hornetq subsystem.  
-To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> Queues/Topics -> Add .  
+To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> View -> Queues/Topics -> Add .  
 Populate the dialog box as follows:
 
 image::images/add_queue.png[]
@@ -359,9 +358,10 @@ The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.loadtest.JM
 Note that this class also extends the JMeter AbstractJavaSamplerClient class.
 Use of JMeter with this reference architecture will be discussed in the next section of this documentation.
 
-This document will not cover aspects of this client that are common to sending JMS messages,  However, there are a few important details in the client that are 
-specific to this use case that require further explanation.  These details are discussed in the following sections.  Open the client class
-in an editor to view the details along with this discussion.
+This document will not cover aspects of this client that are common to sending JMS messages.
+However, there are a few important details in the client that are specific to this use case that require further explanation.
+These details are discussed in the following sections.
+Open the client class in an editor to view the details along with this discussion.
 
 ==== JAXB deserialization
 The client class uses JAXB to serialize the POJOs before sending them via JMS.  The following is required by the client to provide the JAXB context required for serializing
