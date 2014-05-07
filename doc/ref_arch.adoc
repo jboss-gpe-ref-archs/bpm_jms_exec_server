@@ -73,7 +73,7 @@ System properties for the client are read from the the pom.xml file associated w
 In addition the client has dependencies on the HornetQ client libraries for making connections with the HornetQ broker.
 
 === pom.xml
-The pom.xml file contains a plugin for Jmeter allowing the JMeter tests to be run by issuing a Maven build command of `mvn clean verify`.
+The pom.xml file contains a plugin for JMeter allowing the JMeter tests to be run by issuing a Maven build command of `mvn clean verify`.
 The pom.xml file also contains the values for numerous properties used by the client.
 
 === Domain
@@ -82,7 +82,7 @@ The domain library must be made available to the client, as a standard Maven dep
 
 === HornetQ
 HornetQ is the default JMS broker available on JBoss EAP.  For this reference architecture, four queues are defined in HornetQ.  
-These will be viewable via the JBoss EAP console as described below.
+These will be view-able via the JBoss EAP console as described below.
 
 === Maven Repository
 Apache Maven is a distributed build automation tool used in Java application development to create, manage, and build software projects. Maven uses standard configuration files called Project Object Model, or POM, files to define projects and manage the build process. POMs describe the module and component dependencies, build order, and targets for the resulting project packaging and output using an XML file. This ensures that the project is built in a correct and uniform manner. For more information on Maven see {maven}.
@@ -108,7 +108,7 @@ When a process instance is created that contains a JMS Service Task, the process
 In this case that class is the JMSWorkItemHandler(WIH). This class is deployed as part of the Kmodule deployment as discussed below.
 
 === JMS Broker
-The JMS service does an JNDI lookup to find the JMS broker for sending messages.  In the case of this reference architecture, that JMS broker is the HornetQ JMS broker 
+The JMS service does an JNDI look-up to find the JMS broker for sending messages.  In the case of this reference architecture, that JMS broker is the HornetQ JMS broker 
 that comes bundled with JBoss EAP 6.  As discussed below, this may be reconfigured to point to the JMS broker of your choice.
 
 == Pre-Requisites
@@ -125,7 +125,7 @@ The following is a list of pre-requisites:
 . proficiency with basic *nix command line
 . proficiency with vi
 
-As is evidenced by these pre-requisites, the assumed BPM Suite 6 runtime environment for this reference architecture 
+As is evidenced by these pre-requisites, the assumed BPM Suite 6 run-time environment for this reference architecture 
 documentation is an Openshift Enterprise gear.  However, BPM Suite 6 can be installed in a non-PaaS local environment.  
 Thus it could be possible to execute this reference architecture in a non-PaaS local environment as well.
 
@@ -196,7 +196,7 @@ Cart to restart?
 ----------
 
 When the cursor returns, typically the server has not completely started at that moment.  Use the following command to view the log file and confirm
-when the server startup has completed:
+when the server start-up has completed:
 
 .View the server log
 ----------
@@ -205,9 +205,9 @@ tail -f ~/bpms/standalone/log/server.log
 
 Wait for a log entry that includes the following:
 
-.Confirmation of server startup
+.Confirmation of server start-up
 ----------
-Deployed "business-central.war" (runtime-name : "business-central.war")
+Deployed "business-central.war" (run-time-name : "business-central.war")
 ----------
 
 Alternatively, you may get the following message:
@@ -233,7 +233,7 @@ For example, in some use-cases, clients may send many more requests involving hu
 If the business-process related messages are sent to `KIE.SESSION` and the human-task related messages are sent to `KIE.TASK`, then processing of business-process related messages occurs independent of processing of human-task related messages.
 
 The BPM Suite 6 Execution Server uses a Message Driven Bean (MDB) to process messages from the queues.  
-To change any of the above queues to an alternative queue, change the JDNI name in the MDB configuration to point to the desired queue.  
+To change any of the above queues to an alternative queue, change the JNDI name in the MDB configuration to point to the desired queue.  
 The JNDI configuration for the MDB can be found at the following location:
 
 .ejb-jar.xml file for the MDB
@@ -325,7 +325,7 @@ Doing so will sync your local repo with your remote Openshift repo.
 === Review and deploy the *processTier* project
 . View the _processTier_ project in your BPM Suite 6 server
 .. Select `Authoring` -> `Project Authoring`
-.. Make sure the `processTier` repository is viewable in the `Project Explorer`
+.. Make sure the `processTier` repository is view-able in the `Project Explorer`
 ... Toggle the view using the wheel icon image:images/wheel.png[] if needed.
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
 . Find and open the `bpm_jms_exec_server` BPMN2 business process in the Web Designer
@@ -483,7 +483,7 @@ To register the Work Item Handler it must be registered with the process engine.
 </kmodule>
 ----------
 
-=== Adding the WIH to the classpath
+=== Adding the WIH to the class-path
 Also within Business-central, navigate the project folders to `com.redhat.gpe.refarch.bpm_jms_exec_server.processTier`.  Click on `Java Source Files` in the project assets pain.
 There you will find the `JMSWorkItemHandler` implementation file.  This work item implementation file is included in the kjar deployment.  As of version 6.0.1 of BPM Suite 6, this
 file must be included in the kjar.  It will not be found if added as a static module.
