@@ -4,8 +4,6 @@
 
 image::doc/images/rhheader.png[width=900]
 
-image::doc/images/rhheader.png[width=900]
-
 :numbered!:
 
 == PURPOSE:
