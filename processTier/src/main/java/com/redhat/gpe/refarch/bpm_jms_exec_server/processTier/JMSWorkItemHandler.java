@@ -69,7 +69,7 @@ public class JMSWorkItemHandler implements WorkItemHandler {
 
         Context jndiContext = null;
         try {
-        	log.info("getJMSObjects() cFactoryName = "+cFactoryName+" : qName = "+qName);
+            log.info("getJMSObjects() cFactoryName = "+cFactoryName+" : qName = "+qName);
             jndiContext = new InitialContext();
             ConnectionFactory cFactory = (ConnectionFactory)jndiContext.lookup(cFactoryName);
             connection = cFactory.createConnection();
