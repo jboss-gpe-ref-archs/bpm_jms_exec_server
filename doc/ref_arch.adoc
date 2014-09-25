@@ -41,9 +41,10 @@ the request in the message until the the process explicitly indicates that the m
 . *Scalability* - Scaling with JMS is straight-forward.  If messages are being processed too slowly, simply add more processes to receive and process the messages.
 . *Resiliency* - If the message receiving process fails, crashes, or is just down for maintenance, the decoupling provided by the JMS interface allows the message
 producer to continue, unharmed by the the issues on consumer.
-. *Delivery Guarantees* - The redundancy provided by JMS means that message delivery is guaranteed.  In many cases, queues are configured to be durable; their state
-is even guaranteed to survive a server crash on the JMS broker, because messages are saved to a storage device.
-. *Ordering Guarantees* - Various options are available for controlling the ordering of messages received from a queue, however the most common configuration is to provide
+. *Delivery Guarantees* - The redundancy provided by JMS means that message delivery is guaranteed.
+In many cases, queues are configured to be durable; their state is even guaranteed to survive a server crash on the JMS broker, because messages are saved to a storage device.
+. *Ordering Guarantees* - 
+Various options are available for controlling the ordering of messages received from a queue, however the most common configuration is to provide
 the messages in FIFO order (First In, First Out).
 . *Buffering* - BPM is particularly well-suited for handling long-running business processes.  While a message producer may produce many messages in a day, a long-running business
 process may have numerous wait-states and thus could take days to process.  It is critical that messages from producer systems are queued for processing when
@@ -87,10 +88,15 @@ For this reference architecture, four queues are defined in HornetQ.
 These will be view-able via the JBoss EAP console as described below.
 
 ==== Maven Repository
-Apache Maven is a distributed build automation tool used in Java application development to create, manage, and build software projects. Maven uses standard configuration files called Project Object Model, or POM, files to define projects and manage the build process. POMs describe the module and component dependencies, build order, and targets for the resulting project packaging and output using an XML file. This ensures that the project is built in a correct and uniform manner. For more information on Maven see {maven}.
+Apache Maven is a distributed build automation tool used in Java application development to create, manage, and build software projects. 
+Maven uses standard configuration files called Project Object Model, or POM, files to define projects and manage the build process.
+POMs describe the module and component dependencies, build order, and targets for the resulting project packaging and output using an XML file.
+This ensures that the project is built in a correct and uniform manner.
+For more information on Maven see {maven}.
 
 ==== Execution Server
-The Execution Server exposes BPM Suite 6 functionality as a service.  Clients can interact with the BPM Suite 6 execution server via either REST or JMS.
+The Execution Server exposes BPM Suite 6 functionality as a service.
+Clients can interact with the BPM Suite 6 execution server via either REST or JMS.
 For this reference architecture the Execution Server is the component that enables access to the process engine via JMS. 
 
 ==== BPM Suite 6 Process Engine
