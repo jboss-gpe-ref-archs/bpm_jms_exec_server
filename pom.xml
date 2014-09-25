@@ -9,6 +9,7 @@
 
   <modules>
     <module>domain</module>
+    <module>wih</module>
   </modules>
 
 
