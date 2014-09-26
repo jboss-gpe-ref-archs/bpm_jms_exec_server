@@ -6,6 +6,7 @@
 :osetools: link:https://access.redhat.com/site/documentation/en-US/OpenShift_Enterprise/2/html-single/Client_Tools_Installation_Guide/index.html[Openshift Enterprise client tools]
 :commands: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/6.0/html-single/Development_Guide/index.html#Execute_calls[BPM Suite 6 Commands]
 :maven: link:https://access.redhat.com/site/documentation/en-US/Red_Hat_JBoss_BPM_Suite/6.0/html-single/Development_Guide/index.html#sect-Learn_about_Maven[Learn about Maven]
+:mwlaboverviewsetup: link:http://people.redhat.com/jbride/labsCommon/setup.html[Middleware Lab Overview and Set-up]
 
 image::images/rhheader.png[width=900]
 
@@ -146,19 +147,6 @@ Doing so will ensure that you are proficient with the tooling and workflow neede
 . Familiarity with {bpmproduct}
 
 == Configuration and Execution
-The following major steps are required to setup this use case.  The sections to follow will review these steps in detail.
-
-.Setup Summary
-. Clone this reference architecture
-. Domain class installation
-. Understand BPM Suite 6 message queues
-. Configure port forwarding for the JMS Broker
-. Add the target business process to the server
-. Add the _JmsServiceQueue_
-. Configure the JMS Client
-. Execute the use case
-
-The details of these steps are provided below.
 
 === local: Clone this reference architecture
 This reference architecture will be cloned both in your local computer as well as in your remote BPM Suite 6 Openshift environment.
@@ -206,6 +194,56 @@ To build the various sub-projects, execute the following:
 +
 image::images/maven_build_success.png[]
 
+=== Provision BPM Suite 6 application
+
+. Open the `Openshift Explorer` panel of the `JBoss` perspective of JBDS
+. Right-click on the previously created connection to `broker00.ose.opentlc.com`.
++
+Using your `OPENTLC-SSO` credentials, a connection to `broker00.ose.opentlc.com` should already exist after having completed the {mwlaboverviewsetup} guide.
+
+. Select: `New -> Application` .
++
+Since you have already created a domain from the previous introductory lab, the workflow for creation of a new application will be slightly different than what you are used to.
+In particular, the OSE plugin will not prompt you for the creation of a new domain.
+
+. The following `New or existing OpenShift Application` pop-up should appear:
++
+image::images/new_OSE_app_bpm.png[]
+
+.. In the `Name` text box, enter: `bpmsapp`
+.. From the `Type` drop-down, select: JBoss BPMS 6.0 (rhgpe-bpms-6.0)
+.. From the `Gear profile` drop-down, select: pds_medium
+.. From the `Embeddable Cartridges` section, select: `MySQL 5.1`
+
+. Click `Next`
+. A new dialogue appears entitled `Set up Project for new OpenShift Aplication`.
++
+Check the check box for `Disable automatic maven build when pushing to OpenShift`.
+Afterwards, Click `Next`.
+
+. A new dialogue appears entitled `Import an existing OpenShift application`.
++
+Even though it will not be used, you will be forced to clone the remote git enabled project associated with your new OpenShift application.
+Select a location on your local filesystem where the git enabled project should be cloned to.
++
+image::images/gitclonelocation_bpm.png[]
+
+. Click `Finish`
+. The OSE plugin of JBDS will spin for a couple of minutes as the remote BPM Suite 6 enabled OpenShift application is created.
+. Eventually, the OSE plugin will prompt with a variety of pop-up related details regarding your new application.
++
+Click through all of them except when you come to the dialogue box entitled `Publish bpmsapp?`.
+For this dialogue box, click `No`
++
+image::images/publishbpmslab.png[]
+
+=== BPM Suite 6 App Verification
+
+. Using the `Remote System Explorer` perspective of JBDS, open an SSH terminal and tail the `fsw/standalone/log/server.log` of your remote BPM Suite 6 enabled OSE application
+. Log messages similar to the following should appear:
++
+image::images/newbpmlogfile.png[]
+
 === BPM Suite 6: Domain jar deployment 
 This reference architecture includes a subproject called `domain`.  
 This sub-project contains a maven build file along with the application specific domain classes for this reference architecture.  
@@ -234,7 +272,7 @@ image::images/wihjar.png[]
 . In the `Remote System Explorer` perspective of JBDS, navigate to `bpmsapp-<your domain>.apps.ose.opentlc.com -> Sftp Files -> My Home -> bpms -> standalone -> deployments -> business-central.war -> WEB-INF -> lib`
 . Right-click and select `Paste`
 
-=== Register Service Task Mapping
+=== BPM Suite 6: Register Service Task Mapping
 The name `JMSProducerTask` needs to be mapped to the custom WorkItemHandler included in this reference architecture and registered with the BPM Suite 6 process engine.
 The mapping between Service Task name and its workItemHandler implementation can be defined in a pre-existing BPM Suite 6 configuration file.
 This can be accomplished as follows:
@@ -253,7 +291,7 @@ image::images/customservicetasks.png[]
 . Save the change and quit 
 . Switch back to the `OpenShift Explorer` panel in JBDS and restart the `bpmsapp` application.
 
-=== Understand BPM Suite 6 Message Queues
+=== BPM Suite 6: Understand BPM Suite 6 Message Queues
 When the business-central Workbench is deployed, the embedded _Execution Server_ begins to listen on the following queues already configured in the Hornetq subsystem:
 
 * jms/queue/KIE.SESSION
@@ -314,7 +352,7 @@ image::images/add_queue.png[]
 +
 image::images/fivequeues.png[] 
 
-=== Clone this reference architecture in BPM Suite 6
+=== BPM Suite 6: Clone this reference architecture
 Use the following steps to clone this reference architecture in BPM Suite 6:
 
 . Open your browser and log into the `BPM Console` of BPM Suite 6
@@ -336,7 +374,7 @@ image::images/clone_repo.png[]
 .. Click `Clone`
 .. Once successfully cloned, BPM Suite 6 will pop-up a new dialog box with the message:  _The repository is cloned successfully_
 
-=== Review and deploy the *processTier* project
+=== BPM Suite 6: Review and deploy the *processTier* project
 . View the _processTier_ project in your BPM Suite 6 server
 .. Select `Authoring` -> `Project Authoring`
 .. Make sure the `processTier` repository is view-able in the `Project Explorer`
@@ -358,7 +396,7 @@ Use the following steps to create a deployment for the project:
 If you used the values in this document, then the deployment ID will be: `com.redhat.gpe.refarch.bpm_jms_exec_server:processTier:1.0`.  
 This value will be used in the client's JMS message.
 
-=== Configure port forwarding for the JMS Broker
+=== Local: Port-forward remote Hornetq broker
 HornetQ accepts inbound TCP connections on port `5445`.
 This port is not a default open port in OpenShift Enterprise. 
 Subsequently, port 5445 needs to be tunneled using ssh from your local to your remote BPM Suite 6 environment.
@@ -371,7 +409,7 @@ image::images/portforwarding.png[]
 
 While port forwarded ssh tunnels are running, the remote HornetQ broker can be accessed on the local computer at `localhost:5445`.
 
-=== Configure the JMS Client
+=== Local: Configure the JMS Client
 The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  
 It is a java class that builds an instance of the _Policy_ domain object and sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  
 The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.loadtest.JMSClient*.  
@@ -393,7 +431,7 @@ This document will not cover aspects of this client that are common to sending J
 However, there are a few important details in the client that are specific to this use case that require further explanation.
 These details are discussed in the following sections.
 
-==== JAXB deserialization
+==== JAXB marshalling
 The client class uses JAXB to serialize the POJOs before sending them via JMS.
 The following is required by the client to provide the JAXB context required for serializing the POJO on the client side:
 
@@ -421,7 +459,7 @@ msg.setStringProperty(EXTRA_JAXB_CLASSES_PROPERTY_NAME, extraJaxbClassesProperty
 In this code snipped, *Policy.class* is the class for the POJO object called Policy.
 If additional classes were required, then simply add more calls to the `extraJaxbClasses.add` method.
 
-==== Provide the target for the message
+==== Local: Provide the target for the message
 Once the object has been deserialized on the server, the Execution Server must know which deployment is the target of the message.
 For this information, another string property is set on the JMS message as shown in the follow code snippet:
 
@@ -456,7 +494,7 @@ JaxbCommandsRequest req = new JaxbCommandsRequest(deploymentId, cmd); <3>
 The StartProcessCommand object is only one of may commands that can be processed by the execution server.
 For a complete list of available commands see {commands}.
 
-=== Execute the use case
+=== Local: Execute test
 Before executing the test, open the *loadtest/pom.xml* file and configure the parameters to suite your server.
 In particular be sure that the following properties are correct for your environment:
 
@@ -484,8 +522,8 @@ image::images/executeloadtest.png[]
 
 . Click `Apply` and `Run`
 
-=== View results
-* The server.log of your remote BPM Suite 6 enabled Openshift Environment should include statements similar to the following:
+=== BPM Suite 6:  View results
+* The `bpms/standalone/log/server.log` of your remote BPM Suite 6 enabled Openshift Environment should include statements similar to the following:
 
 -------
 [com.redhat.gpe.refarch.bpm_jms_exec_server.processTier.JMSWorkItemHandler]  Sending messageContent: Driver  properties =
