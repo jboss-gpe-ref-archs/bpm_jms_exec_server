@@ -147,10 +147,11 @@ Doing so will ensure that you are proficient with the tooling and workflow neede
 . Familiarity with {bpmproduct}
 
 == Provision OpenShift Applications
-Partner Demo System allows for the creation and hosting of JBoss Fuse Service Works and JBoss BPM Suite 6 runtimes in a cloud environment.
-Specifically, this cloud environment is powered by Red Hat's OpenShift Enterprise Platform-as-a-Service (PaaS) environment.
+Partner Demo System allows for the creation and hosting of JBoss BPM Suite 6 runtimes in a cloud environment.
+
+This cloud environment is powered by Red Hat's OpenShift Enterprise Platform-as-a-Service (PaaS) environment.
 You can access this online lab environment 24/7.
-Using this lab environment enables you to focus on developing services and business logic using JBoss Fuse Service Works instead of installation and configuration details.
+Using this lab environment enables you to focus on developing services and business logic using JBoss middleware instead of installation and configuration details.
 
 === Provision BPM Suite 6 application
 
@@ -197,7 +198,7 @@ image::images/publishbpmslab.png[]
 
 === BPM Suite 6 App Verification
 
-. Using the `Remote System Explorer` perspective of JBDS, open an SSH terminal and tail the `fsw/standalone/log/server.log` of your remote BPM Suite 6 enabled OSE application
+. Using the `Remote System Explorer` perspective of JBDS, open an SSH terminal and tail the `bpms/standalone/log/server.log` of your remote BPM Suite 6 enabled OSE application
 . Log messages similar to the following should appear:
 +
 image::images/newbpmlogfile.png[]
@@ -370,11 +371,12 @@ The userId to use is:  `jboss`  and the password to use is:  `brms`
 . Select `Organizational Units` -> `Manage Organizational Units`
 . Under `Organizational Unit Manager`, select the `Add` button
 . Enter a name of _gpe_ and an owner of _jboss_. Click `OK`
-. Clone this fsw_bpms_integration repository in BPM Suite 6
+. Clone this `bpm_jms_exec_server` repository in BPM Suite 6
 .. Select `Repositories` -> `Clone Repository` .
 .. Populate the _Clone Repository_ box as follows:
 +
 image::images/clone_repo.png[]
+
 ... `Repository Name` :  _bpmjmsexecserver_
 ... `Organizational Unit` : _gpe_
 ... `Git URL` :     _https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_
