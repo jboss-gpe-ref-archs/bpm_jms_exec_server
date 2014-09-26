@@ -21,7 +21,7 @@ This reference architecture deep-dives into two major use cases related to JMS a
 +
 Starting a BPM Suite 6 process via the JMS API of the BPM Suite 6 Execution Server.  
 
-. `JMS Service Task` 
+. `JMSProducerTask` 
 +
 Sends a JMS message during execution of a BPM Suite 6 process to a remote JMS queue.
 
@@ -101,6 +101,11 @@ For this reference architecture the Execution Server is the component that enabl
 
 ==== BPM Suite 6 Process Engine
 The BPM Suite 6 Process Engine is responsible for managing the state of BPMN2 process instances.
+This reference architecture includes a very simple BPMN2 process definition:
+
+image::images/bpmn.png[width="40%"]
+
+Instances of this BPMN2 process definition will be instantiated and their lifecycle managed by the BPM Suite 6 Process Engine.
 
 ===  JMS Service Task
 The purpose of the JMS Service Task is to send messages to a JMS Queue or Topic from a business process.
@@ -191,64 +196,62 @@ image::images/import_mvn_project.png[]
 +
 image::images/maven_projects.png[]
 
+=== local: Build the Reference Architecture
+This reference architecture includes various sub-projects that need to be built locally.
+To build the various sub-projects, execute the following:
 
-=== Domain class installation
-In $REF_ARCH_HOME, there is a directory called `domain`.  
-This directory contains a maven project for building and packaging the jar files that will contain the domain classes for this reference architecture.  
-If you examine the domain classes, you will find that they are configured to enable serialization via Java Architecture for XML Binding (JAXB).  
-There are steps required by the client to enable the server to process the JAXB annotated objects.
-Those details are discussed in the <<Configure_the_JMS_Client,client configuration>> section. 
+. In the `Project Explorer` panel of JBDS, right-click on the `parent` project
+. Navigate to: `Run As -> Maven Install`
+. In the `Console` panel, a `BUILD SUCCESS` log message should appear.
++
+image::images/maven_build_success.png[]
 
-The following steps are directions for building the jar file and installing the jar as a static module on your EAP server running in OpenShift.
-The `business-central.war` application in BPM Suite 6 will also be configured to have a dependency on the static module, making the domain class available to use in your business processes.
+=== BPM Suite 6: Domain jar deployment 
+This reference architecture includes a subproject called `domain`.  
+This sub-project contains a maven build file along with the application specific domain classes for this reference architecture.  
+In `Project Explorer`, examine the domain classes and notice that they include Java Architecture for XML Binding (JAXB) annotations.  
+
+The following are directions for deploying the jar file to your remote BPM Suite 6 server running in OpenShift.
 
 From your local cloned copy of this reference architecture execute the following:
 
-. create the jar for the domain classes
-.. `cd $REF_ARCH_HOME`
-.. `mvn clean install`
-. copy the directories and files required to create a static module on the JBoss EAP server
-.. `scp -r domain/conf/org <your_openshift_url>:~/app-root/data/appModules/`
-.. `scp domain/target/domain-1.0.jar <your_openshift_url>:~/app-root/data/appModules/org/acme/insurance/main`
-. Add an explicit dependency for business-central.war on the static module for the domain module
-.. `ssh <your_openshift_url>`
-.. Open the following file using vi:  `~/bpms/standalone/deployments/business-central.war/WEB-INF/jboss-deployment-structure.xml`
-.. Add the following to the list of dependencies: 
+. In the `Project Explorer` panel of the `JBOSS` perspective of JBDS, right-click on the `domain/target/domain-1.0.jar` in `Project Explorer` and select `Copy`.
 +
------
-<module name="org.acme.insurance" export="true" services="import" meta-inf="import"/>
------
+image::images/domainjar.png[]
 
-. Save the changes to the file
+. In the `Remote System Explorer` perspective of JBDS, navigate to `bpmsapp-<your domain>.apps.ose.opentlc.com -> Sftp Files -> My Home -> bpms -> standalone -> deployments -> business-central.war -> WEB-INF -> lib`
+. Right-click and select `Paste`
++
+image::images/pastedomainjarintobizcentral.png[]
 
+=== BPM Suite 6:  Add the WIH class to the class-path
+Similar to the application domain model library, the library containing the JMS custom workItemHandler also needs to be added to the classpath of the remote BPM Suite 6 server.
+
+. In the `Project Explorer` panel of the `JBOSS` perspective of JBDS, right-click on the `wih/target/domain-1.0.jar` in `Project Explorer` and select `Copy`.
++
+image::images/wihjar.png[]
+
+. In the `Remote System Explorer` perspective of JBDS, navigate to `bpmsapp-<your domain>.apps.ose.opentlc.com -> Sftp Files -> My Home -> bpms -> standalone -> deployments -> business-central.war -> WEB-INF -> lib`
+. Right-click and select `Paste`
 
 === Register Service Task Mapping
-To register the Work Item Handler it must be registered with the process engine.  This is done via the project kmodule.xml as follows:
+The name `JMSProducerTask` needs to be mapped to the custom WorkItemHandler included in this reference architecture and registered with the BPM Suite 6 process engine.
+The mapping between Service Task name and its workItemHandler implementation can be defined in a pre-existing BPM Suite 6 configuration file.
+This can be accomplished as follows:
 
-. Within Business-central navigate to the `kmodule.xml` file. (under resources/META-INF)
-. Notice the following has already been added:
+. In the `Remote System Explorer` perspective, ssh into the `bpmsapp` gear.
+. execute: vi `~/bpms/standalone/deployments/business-central.war/WEB-INF/classes/META-INF/CustomWorkItemHandlers.conf`
+.. notice the existing mappings for various base-product Service Tasks (Log, WebService, Rest)
+.. add a comma to the end of the last service task mapping and then append the following:
++
+-----
+"JMSProducerTask": new com.redhat.gpe.refarch.bpm_jms_exec_server.processTier.JMSWorkItemHandler()
+-----
++
+image::images/customservicetasks.png[]
 
-----------
-<kmodule xmlns="http://jboss.org/kie/6.0.0/kmodule" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <kbase name="policyQuoteKBase" default="true" eventProcessingMode="stream" equalsBehavior="equality" declarativeAgenda="disabled" scope="javax.enterprise.context.ApplicationScoped" packages="*">
-    <ksession name="policyQuoteKSession" type="stateful" default="true" clockType="realtime" scope="javax.enterprise.context.ApplicationScoped">
-      <workItemHandlers>
-        <workItemHandler type="new org.gpe.service.jms.JMSWorkItemHandler()" name="JMSServiceTask"/>
-      </workItemHandlers>
-    </ksession>
-  </kbase>
-</kmodule>
-----------
-
-=== Adding the WIH to the class-path
-Also within Business-central, navigate the project folders to `com.redhat.gpe.refarch.bpm_jms_exec_server.processTier`.
-Click on `Java Source Files` in the project assets panel.
-There you will find the `JMSWorkItemHandler` implementation file.
-This work item implementation file is included in the kjar deployment.
-As of version 6.0.1 of BPM Suite 6, this file must be included in the kjar.
-It will not be found if added as a static module.
-
-. Restart your OpenShift BPM Suite 6 instance
+. Save the change and quit 
+. Switch back to the `OpenShift Explorer` panel in JBDS and restart the `bpmsapp` application.
 
 === Understand BPM Suite 6 Message Queues
 When the business-central Workbench is deployed, the embedded _Execution Server_ begins to listen on the following queues already configured in the Hornetq subsystem:
@@ -256,22 +259,22 @@ When the business-central Workbench is deployed, the embedded _Execution Server_
 * jms/queue/KIE.SESSION
 * jms/queue/KIE.TASK
 * jms/queue/KIE.RESPONSE
+* jms/queue/KIE.AUDIT
 
-The `KIE.SESSION` and `KIE.TASK` queues should be used to send command request messages to the JMS API. 
+The `KIE.SESSION` and `KIE.TASK` queues should be used to send command request messages to the JMS API of the BPM Suite 6 Execution Server. 
 Command response messages will be then placed on the `KIE.RESPONSE` queue. 
 Command request messages that involve starting and managing business processes should be sent to the `KIE.SESSION` and command request messages that involve managing human tasks, should be sent to the `KIE.TASK` queue.
 
-Messages sent to the two different input queues, `KIE.SESSION` and `KIE.TASK`, will be processed in the same manner regardless of which queue they are sent to.  The reason that two input queues are provided (rather than just one) is to allow for messages to be prioritized with more control.  
+Messages sent to the two different input queues, `KIE.SESSION` and `KIE.TASK`, will be processed in the same manner regardless of which queue they are sent to.
+The reason that two input queues are provided (rather than just one) is to allow for messages to be prioritized with more control.  
 For example, in some use-cases, clients may send many more requests involving human tasks than requests involving business processes.  
 If the business-process related messages are sent to `KIE.SESSION` and the human-task related messages are sent to `KIE.TASK`, then processing of business-process related messages occurs independent of processing of human-task related messages.
 
 The BPM Suite 6 Execution Server uses a Message Driven Bean (MDB) to process messages from the queues.  
-To change any of the above queues to an alternative queue, change the JNDI name in the MDB configuration to point to the desired queue.  
-The JNDI configuration for the MDB can be found at the following location:
+To change any of the configuration details of the MDBs, navigate to the following file in the BPM Suite 6 JVM and modify as appropriate:  
 
-.ejb-jar.xml file for the MDB
 ----------
-$JBOSS_HOME/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
+~/bpms/standalone/deployments/business-central.war/WEB-INF/ejb-jar.xml
 ----------
 
 In your remote Openshift environment provisioned with BPM Suite 6, the 3 JMS API Execution Server queues are already created in the default messaging subsystem: HornetQ. 
@@ -296,46 +299,42 @@ Therefore, your JMS clients sending process-instance and human task related mess
 === Add the _JmsServiceQueue_
 The *bpm_jms_exec_server* business process definition defines a custom Service Task whose corresponding custom workItemHandler will send a message to a business queue in the co-located Hornetq sub-system.  
 This business queue (called _JmsServiceQueue_ ) needs to be created in the Hornetq subsystem.  
-To create this queue, open the JBoss EAP Management Console to your remote Openshift environment and navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> View -> Queues/Topics -> Add .  
-Populate the dialog box as follows:
 
+To create this queue, execute the following:
+
+. In your browser, authenticate into the JBoss EAP Management Console of your remote BPM Suite 6 environment
+. navigate to:  Profile -> Subsystems -> Messaging -> Destinations -> default -> View -> Queues/Topics -> Add
++
 image::images/add_queue.png[]
 
+. Populate the dialog box as follows:
+.. Name : `JmsServiceQueue`
+.. JNDI Names :  `java:/queue/JmsServiceQueue`
+. There should now be 5 queues configured in the Hornetq messaging subsystem:
++
+image::images/fivequeues.png[] 
+
 === Clone this reference architecture in BPM Suite 6
-This reference architecture uses a simple business process that includes a _Service Task_ that places a message on a JMS business queue.
-
-image::images/bpmn.png[width="40%"]
-
 Use the following steps to clone this reference architecture in BPM Suite 6:
 
-. Create an *Organization and clone this project's git repository in your BPM Suite 6 server
-.. Select `Authoring` -> `Administration`
-.. Select `Organizational Units` -> `Manage Organizational Units`
-.. Under `Organizational Unit Manager`, select the `Add` button
-.. Enter a name of _gpe_ and an owner of _jboss_. Click `Ok`
-. Clone this bpm_jms_exec_server repository in BPM Suite 6
-.. Select `Repositories` -> `Clone Repository` .  Populate the _Clone Repository_ box as follows and then click _Clone_ :
+. Open your browser and log into the `BPM Console` of BPM Suite 6
++
+The userId to use is:  `jboss`  and the password to use is:  `brms`
+
+. Navigate to:  Authoring -> Administration.
+. Select `Organizational Units` -> `Manage Organizational Units`
+. Under `Organizational Unit Manager`, select the `Add` button
+. Enter a name of _gpe_ and an owner of _jboss_. Click `OK`
+. Clone this fsw_bpms_integration repository in BPM Suite 6
+.. Select `Repositories` -> `Clone Repository` .
+.. Populate the _Clone Repository_ box as follows:
 +
 image::images/clone_repo.png[]
-
-.. Enter _bpmjmsexecserver_ as the value of the _repository name_.  The _Git URL_ is the URL to this git project in github:  
-+
------
-https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git 
------
-
+... `Repository Name` :  _bpmjmsexecserver_
+... `Organizational Unit` : _gpe_
+... `Git URL` :     _https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git_
+.. Click `Clone`
 .. Once successfully cloned, BPM Suite 6 will pop-up a new dialog box with the message:  _The repository is cloned successfully_
-
-. Open a command window to your previously cloned $REF_ARCH_HOME/bpm_jms_exec_server directory.
-. Add to this git project a remote reference to the corresponding _bpmjmsexecserver_ repository in your Openshift environment
-+
-----------
-git remote add oserepo ssh://<your.openshift.ssh.url>/~/app-root/data/bpmsGit/.niogit/bpmjmsexecserver.git
-----------
-
-. in your local $REF_ARCH_HOME/bpms_jms_exec_server directory, execute:  _git pull oserepo master_ .  
-+
-Doing so will sync your local repo with your remote Openshift repo.
 
 === Review and deploy the *processTier* project
 . View the _processTier_ project in your BPM Suite 6 server
@@ -345,6 +344,9 @@ Doing so will sync your local repo with your remote Openshift repo.
 . From within the business-central workbench, select `Authoring` -> `Project Authoring`
 . Find and open the `bpm_jms_exec_server` BPMN2 business process in the Web Designer
 . Open the `Properties` panel for the process and notice the process Id value of `processTier.bpm_jms_exec_server`. 
++
+image::images/processproperties.png[]
++
 This will be used in the client's JMS message.
 
 Use the following steps to create a deployment for the project:
@@ -367,15 +369,25 @@ Subsequently, port 5445 needs to be tunneled using ssh from your local to your r
 +
 image::images/portforwarding.png[]
 
-While port forwarding process running, the remote HornetQ broker can be accessed on the local computer at `localhost:5445`.
+While port forwarded ssh tunnels are running, the remote HornetQ broker can be accessed on the local computer at `localhost:5445`.
 
-[[Configure_the_JMS_Client]]
 === Configure the JMS Client
 The JMS Client is located in the *$REF_ARCH_HOME/loadTest* directory of this reference architecture.  
 It is a java class that builds an instance of the _Policy_ domain object and sends the object in a JMS Message to the BPM Suite 6 server to start a business process.  
 The name of the class is *com.redhat.gpe.refarch.bpm_jms_exec_server.loadtest.JMSClient*.  
 Note that this class also extends the JMeter AbstractJavaSamplerClient class.
 Use of JMeter with this reference architecture will be discussed in the next section of this documentation.
+
+. Import the $REF_ARCH_HOME/loadtest maven project into JBDS
++
+The `bpms_jms_exec_server/loadtest` maven project was not previously included in the original import earlier in this reference architecture.
+
+.. Switch to the `Project Explorer` panel of the JBDS and select `File -> Import -> Maven -> Existing Maven Projects`
+.. Click `Next` and browse to the location on disk of `REF_ARCH_HOME/loadtest`
++
+image::images/importloadtest.png[]
+
+.. Click `Finish`
 
 This document will not cover aspects of this client that are common to sending JMS messages.
 However, there are a few important details in the client that are specific to this use case that require further explanation.
@@ -456,10 +468,21 @@ In particular be sure that the following properties are correct for your environ
 
 To execute the process do the following:
 
-. Open a command window and ssh into your server instance.
-. Execute `tail -f ~/bpms/standalone/log/server.log` to watch the server log entry during the test
-. If it is not already running, open a command window and run port forwarding for HornetQ as described in <<HornetQ_port_forwarding,Configure port forwarding for the JMS Broker>>.
-. Open a command window to the $REF_ARCH_HOME/loadTest directory and execute:  `mvn clean verify`
+. In the `Remote System Explorer` perspective, ssh into your remote BPM Suite 6 gear and tail the log file at:
++
+-----
+~/bpms/standalone/log/server.log
+-----
+
+. In the `Project Explorer` panel, right-click on the new `loadtest` project and select:  `Run As -> Maven build`
++
+image::images/loadtestselectrunas.png[]
+
+. In the `Edit configuration and launch` pop-up enter the following in the `Goals` field:  `clean verify`
++
+image::images/executeloadtest.png[]
+
+. Click `Apply` and `Run`
 
 === View results
 * The server.log of your remote BPM Suite 6 enabled Openshift Environment should include statements similar to the following:
