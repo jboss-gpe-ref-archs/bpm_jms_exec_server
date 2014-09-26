@@ -146,53 +146,11 @@ Doing so will ensure that you are proficient with the tooling and workflow neede
 
 . Familiarity with {bpmproduct}
 
-== Configuration and Execution
-
-=== local: Clone this reference architecture
-This reference architecture will be cloned both in your local computer as well as in your remote BPM Suite 6 Openshift environment.
-To clone this reference architecture in your local environment, execute the following:
-
-. Open the `Git` perspective of JBDS.
-. In the `Git Repositories` panel, click the link that allows you to `Clone a Git Repository and add the clone to this view`
-. A pop-up should appear with a name of `Source Git Repository`
-. In the `URI` field, enter the following:
-+
------
-https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git
------
-
-. Click `Next`
-+
-image::images/clone_repo_to_local.png[]
-
-. Continue to click `Next` through the various screens
-+
-On the pop-up screen entitled `Local Destination`, change the default value of the `Directory` field to your preferred location on disk.
-For the purposes of the remainder of these instructions, this directory on your local filesystem will be referred to as:  $REF_ARCH_HOME
-
-. On the last screen of the `Clone Git Repository` pop-up, click `Finish`
-+
-Doing so will clone this `bpm_jms_exec_server` project to your local disk
-
-. In JBDS, switch to the `Project Explorer` panel and navigate to:  `File -> Import -> Maven -> Existing Maven Projects`
-. In the `Root Directory` field of the `Maven Projects` pop-up, navigate to the location on disk where the `bpm_jms_exec_server` project was just cloned to.
-+
-image::images/import_mvn_project.png[]
-
-. Click `next` through the various pop-up panels and finally `Finish`.
-. Your `Project Explorer` panel should now include the following mavenized projects
-+
-image::images/maven_projects.png[]
-
-=== local: Build the Reference Architecture
-This reference architecture includes various sub-projects that need to be built locally.
-To build the various sub-projects, execute the following:
-
-. In the `Project Explorer` panel of JBDS, right-click on the `parent` project
-. Navigate to: `Run As -> Maven Install`
-. In the `Console` panel, a `BUILD SUCCESS` log message should appear.
-+
-image::images/maven_build_success.png[]
+== Provision OpenShift Applications
+Partner Demo System allows for the creation and hosting of JBoss Fuse Service Works and JBoss BPM Suite 6 runtimes in a cloud environment.
+Specifically, this cloud environment is powered by Red Hat's OpenShift Enterprise Platform-as-a-Service (PaaS) environment.
+You can access this online lab environment 24/7.
+Using this lab environment enables you to focus on developing services and business logic using JBoss Fuse Service Works instead of installation and configuration details.
 
 === Provision BPM Suite 6 application
 
@@ -243,6 +201,55 @@ image::images/publishbpmslab.png[]
 . Log messages similar to the following should appear:
 +
 image::images/newbpmlogfile.png[]
+
+
+== Configuration and Execution
+
+=== local: Clone this reference architecture
+This reference architecture will be cloned both in your local computer as well as in your remote BPM Suite 6 Openshift environment.
+To clone this reference architecture in your local environment, execute the following:
+
+. Open the `Git` perspective of JBDS.
+. In the `Git Repositories` panel, click the link that allows you to `Clone a Git Repository and add the clone to this view`
+. A pop-up should appear with a name of `Source Git Repository`
+. In the `URI` field, enter the following:
++
+-----
+https://github.com/jboss-gpe-ref-archs/bpm_jms_exec_server.git
+-----
+
+. Click `Next`
++
+image::images/clone_repo_to_local.png[]
+
+. Continue to click `Next` through the various screens
++
+On the pop-up screen entitled `Local Destination`, change the default value of the `Directory` field to your preferred location on disk.
+For the purposes of the remainder of these instructions, this directory on your local filesystem will be referred to as:  $REF_ARCH_HOME
+
+. On the last screen of the `Clone Git Repository` pop-up, click `Finish`
++
+Doing so will clone this `bpm_jms_exec_server` project to your local disk
+
+. In JBDS, switch to the `Project Explorer` panel and navigate to:  `File -> Import -> Maven -> Existing Maven Projects`
+. In the `Root Directory` field of the `Maven Projects` pop-up, navigate to the location on disk where the `bpm_jms_exec_server` project was just cloned to.
++
+image::images/import_mvn_project.png[]
+
+. Click `next` through the various pop-up panels and finally `Finish`.
+. Your `Project Explorer` panel should now include the following mavenized projects
++
+image::images/maven_projects.png[]
+
+=== local: Build the Reference Architecture
+This reference architecture includes various sub-projects that need to be built locally.
+To build the various sub-projects, execute the following:
+
+. In the `Project Explorer` panel of JBDS, right-click on the `parent` project
+. Navigate to: `Run As -> Maven Install`
+. In the `Console` panel, a `BUILD SUCCESS` log message should appear.
++
+image::images/maven_build_success.png[]
 
 === BPM Suite 6: Domain jar deployment 
 This reference architecture includes a subproject called `domain`.  
